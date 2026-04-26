@@ -16,7 +16,12 @@ def generate_ai_video(image, audio, job_id=None):
     result_path = f"/app/output/wav2lip_{job_id}.mp4"
     
     cmd = f"""
-    docker exec vartapravah_wav2lip python3 inference.py \
+    WAV2LIP_CONTAINER=$(docker ps --format '{{{{.Names}}}}' | grep wav2lip | head -n 1)
+    if [ -z "$WAV2LIP_CONTAINER" ]; then
+        echo "Wav2Lip container not found!"
+        exit 256
+    fi
+    docker exec $WAV2LIP_CONTAINER python3 inference.py \
     --checkpoint_path checkpoints/wav2lip_gan.pth \
     --face {image} \
     --audio {audio} \

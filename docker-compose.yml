@@ -11,7 +11,6 @@ services:
       - "18000:8000"
     env_file: .env
     volumes:
-      - ./assets:/app/assets
       - ./output:/app/output
       - ./logs:/app/logs
     depends_on:
@@ -29,7 +28,6 @@ services:
     command: python -m backend.workflows.temporal_worker
     env_file: .env
     volumes:
-      - ./assets:/app/assets
       - ./output:/app/output
       - ./logs:/app/logs
       - /var/run/docker.sock:/var/run/docker.sock
@@ -76,12 +74,11 @@ services:
   # --- AI RENDERING (Wav2Lip) ---
   wav2lip:
     build:
-      context: ./ai/wav2lip
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ai/wav2lip/Dockerfile
     container_name: vartapravah_wav2lip
     restart: always
     volumes:
-      - ./assets:/app/assets
       - ./output:/app/output
 
 volumes:

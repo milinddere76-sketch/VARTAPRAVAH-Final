@@ -41,5 +41,8 @@ RUN wget -q "https://www.adrianbulat.com/downloads/python-fan/s3fd-619a316812.pt
 RUN mkdir -p checkpoints && \
     wget -q "https://huggingface.co/camenduru/Wav2Lip/resolve/main/checkpoints/wav2lip_gan.pth" -O checkpoints/wav2lip_gan.pth
 
+# Copy static assets to ensure they exist even if volume mount fails
+COPY assets/ /app/assets/
+
 # Script to keep container alive
 CMD ["tail", "-f", "/dev/null"]
