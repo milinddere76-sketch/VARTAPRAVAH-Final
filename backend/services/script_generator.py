@@ -30,7 +30,7 @@ def generate_script(news_content):
         """
         
         response = client.chat.completions.create(
-            model="llama-3.1-70b-versatile", # Higher model for better grammar
+            model="llama-3.3-70b-versatile", # Updated to latest supported 70B model
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"खालील बातम्यांवर आधारित न्यूज बुलेटिन तयार करा:\n\n{news_content}"}
