@@ -17,7 +17,7 @@ RUN git clone https://github.com/Rudrabha/Wav2Lip.git /app/Wav2Lip
 WORKDIR /app/Wav2Lip
 
 # Install requirements
-RUN pip install --upgrade pip setuptools wheel
+RUN pip install --upgrade pip wheel "setuptools<70.0.0"
 # Install PyTorch architecture-aware (ARM64 doesn't exist on the PyTorch CPU index, it's on PyPI)
 RUN if [ "$(uname -m)" = "x86_64" ]; then \
         pip install --no-cache-dir torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cpu; \
