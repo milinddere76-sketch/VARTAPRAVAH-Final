@@ -55,7 +55,7 @@ class NewsProductionWorkflow:
         video_path = await workflow.execute_activity(
             render_video_activity,
             script,
-            start_to_close_timeout=timedelta(seconds=600) # 10 mins for AI
+            start_to_close_timeout=timedelta(seconds=3600) # Increased to 1 hour for heavy AI synthesis
         )
         
         return video_path
