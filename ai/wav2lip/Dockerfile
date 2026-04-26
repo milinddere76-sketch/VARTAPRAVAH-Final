@@ -15,14 +15,18 @@ RUN git clone https://github.com/Rudrabha/Wav2Lip.git /app/Wav2Lip
 WORKDIR /app/Wav2Lip
 
 # Install requirements
+RUN pip install --upgrade pip setuptools wheel
+# Install PyTorch from CPU wheel first
+RUN pip install --no-cache-dir torch==2.0.1+cpu torchvision==0.15.2+cpu torchaudio==2.0.2+cpu --index-url https://download.pytorch.org/whl/cpu
+
+# Install the rest of the requirements
 RUN pip install --no-cache-dir \
-    numpy==1.23.5 \
-    scipy==1.10.1 \
-    torch==2.0.1+cpu torchvision==0.15.2+cpu torchaudio==2.0.2+cpu --index-url https://download.pytorch.org/whl/cpu \
-    librosa==0.9.2 \
-    opencv-python==4.8.0.76 \
+    "numpy<1.24" \
+    scipy \
+    librosa \
+    opencv-python \
     tqdm \
-    numba==0.56.4
+    numba
 
 # Download Face Detection model
 RUN wget -q "https://www.adrianbulat.com/downloads/python-fan/s3fd-619a316812.pth" -O face_detection/detection/sfd/s3fd.pth
