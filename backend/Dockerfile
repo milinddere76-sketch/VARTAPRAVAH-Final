@@ -24,8 +24,8 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy requirements
-COPY requirements.txt .
+# Copy requirements (from backend/ because context is root)
+COPY backend/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --upgrade pip setuptools wheel
@@ -34,9 +34,10 @@ RUN pip install pillow==10.2.0
 
 RUN pip install --no-cache-dir -r requirements.txt -vvv
 
-# Copy application code
+# Copy the entire project (since context is root)
 COPY . .
 
 ENV PYTHONPATH=/app
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Updated to use module path since we are in the root
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -2,13 +2,13 @@ services:
   # --- BACKEND & DASHBOARD ---
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: vartapravah_backend
     restart: always
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
     ports:
-      - "18000:8000" # Changed from 8000 to avoid conflicts
+      - "18000:8000"
     env_file: .env
     volumes:
       - ./assets:/app/assets
@@ -22,11 +22,11 @@ services:
   # --- TEMPORAL WORKER (Workflow Orchestrator) ---
   temporal_worker:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: vartapravah_temporal
     restart: always
-    command: python workflows/temporal_worker.py
+    command: python -m backend.workflows.temporal_worker
     env_file: .env
     volumes:
       - ./assets:/app/assets
@@ -46,18 +46,18 @@ services:
       - DB_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PWD=password
-      - POSTGRES_SEEDS=postgres
+      - POSTGRES_SEEDS=vartapravah_postgres
     ports:
       - "7233:7233"
-      - "18233:8233" # Changed from 8233
+      - "18233:8233"
     depends_on:
       - postgres
 
   # --- STREAMING RELAY ---
   streamer:
     build:
-      context: ./streaming/nginx
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: streaming/nginx/Dockerfile
     container_name: vartapravah_streamer
     restart: always
     env_file: .env
@@ -68,7 +68,7 @@ services:
       - ./logs:/app/logs
     ports:
       - "1935:1935"
-      - "18080:8080" # Changed from 8080 to avoid conflicts
+      - "18080:8080"
 
   # --- INFRASTRUCTURE ---
   postgres:
