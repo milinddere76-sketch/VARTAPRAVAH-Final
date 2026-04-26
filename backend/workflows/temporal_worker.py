@@ -4,13 +4,13 @@ from temporalio import workflow, activity
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from services.news_fetcher import fetch_news
-from services.script_generator import generate_script
-from services.tts_engine import generate_audio
-from services.sadtalker_engine import generate_ai_video
-from services.video_engine import VideoEngine
-from utils.logger import logger
-import config
+from ..services.news_fetcher import fetch_news
+from ..services.script_generator import generate_script
+from ..services.tts_engine import generate_audio
+from ..services.sadtalker_engine import generate_ai_video
+from ..services.video_engine import VideoEngine
+from ..utils.logger import logger
+from .. import config
 
 # --- ACTIVITIES ---
 
@@ -29,7 +29,7 @@ async def render_video_activity(script: str) -> str:
     logger.info("🎬 [ACTIVITY] Rendering Video...")
     # This combines TTS + Sadtalker + Final Composition
     # Simplified for the workflow orchestration
-    from workflows.video_worker import process_task_direct
+    from .video_worker import process_task_direct
     return await process_task_direct(script)
 
 # --- WORKFLOWS ---

@@ -6,10 +6,10 @@ import os
 import redis
 import time
 
-from workflows.scheduler import main as scheduler_main
-import config
-from database import init_db, log_analytics
-from routes import stream, news
+from .workflows.scheduler import main as scheduler_main
+from . import config
+from .database import init_db, log_analytics
+from .routes import stream, news
 
 app = FastAPI(title="VARTA PRAVAH ENTERPRISE DASHBOARD")
 

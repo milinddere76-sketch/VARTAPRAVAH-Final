@@ -3,11 +3,11 @@ import json
 import time
 import os
 from datetime import datetime
-import config
-from services.news_fetcher import fetch_news
-from services.script_generator import generate_script
-from services.fact_checker import is_verified
-from utils.logger import logger
+from .. import config
+from ..services.news_fetcher import fetch_news
+from ..services.script_generator import generate_script
+from ..services.fact_checker import is_verified
+from ..utils.logger import logger
 
 r = redis.Redis(host=config.REDIS_HOST, port=int(config.REDIS_PORT))
 

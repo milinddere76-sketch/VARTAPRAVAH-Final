@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from services.news_fetcher import NewsFetcher
-from services.script_generator import ScriptGenerator
+from ..services.news_fetcher import NewsFetcher
+from ..services.script_generator import ScriptGenerator
 from temporalio.client import Client
-import config
-from utils.logger import logger
+from .. import config
+from ..utils.logger import logger
 
 router = APIRouter(prefix="/news", tags=["news"])
 
