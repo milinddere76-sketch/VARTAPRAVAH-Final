@@ -19,17 +19,17 @@ WORKDIR /app/Wav2Lip
 # Install requirements
 RUN pip install --upgrade pip setuptools wheel
 # Install PyTorch components separately to prevent OOM on constrained deployment servers
-RUN pip install torch==2.0.1+cpu --index-url https://download.pytorch.org/whl/cpu
-RUN pip install torchvision==0.15.2+cpu --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir torch==2.0.1+cpu --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir torchvision==0.15.2+cpu --index-url https://download.pytorch.org/whl/cpu
 
 # Install the rest of the requirements
 RUN pip install --no-cache-dir \
-    "numpy<1.24" \
-    scipy \
-    librosa \
-    opencv-python \
+    numpy==1.23.5 \
+    scipy==1.10.1 \
+    librosa==0.9.2 \
+    opencv-python==4.8.0.76 \
     tqdm \
-    numba
+    numba==0.56.4
 
 # Download Face Detection model
 RUN wget -q "https://www.adrianbulat.com/downloads/python-fan/s3fd-619a316812.pth" -O face_detection/detection/sfd/s3fd.pth
