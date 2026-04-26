@@ -14,7 +14,7 @@ def get_latest_news():
     news = fetcher.fetch_all_categories()
     return {"status": "success", "categories": news}
 
-@router.post("/force-generate")
+@router.get("/force-generate")
 async def force_generate_bulletin():
     """Immediately triggers a NewsProductionWorkflow in Temporal."""
     try:
