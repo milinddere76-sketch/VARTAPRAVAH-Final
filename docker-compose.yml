@@ -32,6 +32,7 @@ services:
       - ./assets:/app/assets
       - ./output:/app/output
       - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - temporal
       - postgres
@@ -71,6 +72,25 @@ services:
     restart: always
     ports:
       - "6379:6379"
+
+  # --- AI RENDERING (SadTalker) ---
+  sadtalker:
+    build:
+      context: ./ai/sadtalker
+      dockerfile: Dockerfile
+    container_name: vartapravah_sadtalker
+    restart: always
+    volumes:
+      - ./assets:/app/assets
+      - ./output:/app/output
+      - ./ai/models:/app/SadTalker/checkpoints
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
 volumes:
   postgres_data:

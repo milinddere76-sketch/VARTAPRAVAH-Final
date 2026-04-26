@@ -35,7 +35,7 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --upgrade pip setuptools wheel
-RUN pip install numpy==1.26.4
+RUN pip install numpy==1.23.5
 RUN pip install pillow==10.2.0
 
 # Install heavy AI packages manually (CPU versions for build stability)
@@ -50,4 +50,4 @@ RUN mkdir -p /app/output /app/checkpoints
 
 # Default command - Download models ONCE at runtime, then stay ready
 # This makes the Docker build fast (minutes) instead of hours.
-CMD ["/bin/bash", "-c", "if [ ! -d '/app/SadTalker/checkpoints' ]; then bash scripts/download_models.sh; fi; python3 inference.py"]
+CMD ["/bin/bash", "-c", "if [ ! -f '/app/SadTalker/checkpoints/mapping_1.pth' ]; then bash scripts/download_models.sh; fi; tail -f /dev/null"]

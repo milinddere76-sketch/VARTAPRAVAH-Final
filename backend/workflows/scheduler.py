@@ -79,15 +79,22 @@ def main():
             script = generate_script(prompt_context)
 
             if script:
-                r.rpush(config.QUEUE_NAME, json.dumps({
-                    "id": int(time.time()),
-                    "type": bulletin_type,
-                    "is_breaking": is_breaking,
-                    "anchor_type": anchor_type,
-                    "script": script,
-                    "headlines": rotation # Pass headlines for the ticker/flash
-                }))
-                logger.info(f"✅ Bulletin queued with {len(rotation)} items.")
+                import asyncio
+                from temporalio.client import Client
+                
+                async def trigger_temporal():
+                    try:
+                        client = await Client.connect("temporal:7233")
+                        await client.start_workflow(
+                            "NewsProductionWorkflow",
+                            id=f"auto-bulletin-{int(time.time())}",
+                            task_queue="vartapravah-queue",
+                        )
+                        logger.info(f"✅ Temporal Bulletin workflow queued for {len(rotation)} items.")
+                    except Exception as e:
+                        logger.error(f"❌ Failed to trigger Temporal: {e}")
+                
+                asyncio.run(trigger_temporal())
 
             # 30-minute cycle
             time.sleep(1800)
