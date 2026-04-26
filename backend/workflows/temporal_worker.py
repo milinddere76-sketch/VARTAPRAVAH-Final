@@ -14,17 +14,17 @@ import config
 
 # --- ACTIVITIES ---
 
-@activity.def
+@activity.defn
 async def fetch_news_activity() -> list:
     logger.info("🎬 [ACTIVITY] Fetching News...")
     return fetch_news()
 
-@activity.def
+@activity.defn
 async def produce_script_activity(news: list) -> str:
     logger.info("🎬 [ACTIVITY] Generating Script...")
     return generate_script("\n".join(news))
 
-@activity.def
+@activity.defn
 async def render_video_activity(script: str) -> str:
     logger.info("🎬 [ACTIVITY] Rendering Video...")
     # This combines TTS + Sadtalker + Final Composition
@@ -34,7 +34,7 @@ async def render_video_activity(script: str) -> str:
 
 # --- WORKFLOWS ---
 
-@workflow.def
+@workflow.defn
 class NewsProductionWorkflow:
     @workflow.run
     async def run(self) -> str:
@@ -60,7 +60,7 @@ class NewsProductionWorkflow:
         
         return video_path
 
-@workflow.def
+@workflow.defn
 class StreamWorkflow:
     @workflow.run
     async def run(self):
