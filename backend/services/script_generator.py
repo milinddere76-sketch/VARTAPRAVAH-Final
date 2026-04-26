@@ -41,7 +41,9 @@ def generate_script(news_content):
         return response.choices[0].message.content
     except Exception as e:
         logger.error(f"Groq Script Generation Error: {e}")
-        return None
+        # Ultimate Fallback: Just read the raw news items if AI script generation fails
+        fallback_script = "ताज्या घडामोडी: " + news_content.replace('---', '')
+        return fallback_script
 
 class ScriptGenerator:
     def generate_marathi_script(self, news_items):

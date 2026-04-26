@@ -29,6 +29,10 @@ def generate_audio(text, file_path):
     """
     global tts_instance
     
+    if not text or str(text).strip() == "":
+        logger.warning("⚠️ [TTS] Received empty text. Using default fallback message.")
+        text = "नमस्कार, वार्ता प्रवाहात आपले स्वागत आहे. सध्या कोणतीही नवीन बातमी उपलब्ध नाही."
+
     if tts_instance is None:
         init_tts()
 
