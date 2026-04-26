@@ -1,6 +1,7 @@
 import requests
 import os
 from backend import config
+from backend.utils.logger import logger
 
 def fetch_sources(query):
     """
