@@ -35,6 +35,18 @@ async def process_task_direct(script: str, anchor_type: str = "female", headline
 
     # 2. SadTalker AI Face Generation
     face_image = os.path.join(config.ASSETS_DIR, f"anchor_{anchor_type}.jpg")
+    if not os.path.exists(face_image):
+        alt_image = os.path.join(config.ASSETS_DIR, f"{anchor_type}_anchor.png")
+        if os.path.exists(alt_image):
+            face_image = alt_image
+        else:
+            # Extreme fallback: use any jpg/png in the assets folder
+            for f in os.listdir(config.ASSETS_DIR):
+                if f.endswith(".jpg") or f.endswith(".png"):
+                    face_image = os.path.join(config.ASSETS_DIR, f)
+                    break
+    
+    logger.info(f"Using face image: {face_image}")
     
     # This function handles full synthesis
     sadtalker_video = generate_ai_video(face_image, audio_file, task_id)

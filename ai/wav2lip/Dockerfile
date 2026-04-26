@@ -18,9 +18,12 @@ WORKDIR /app/Wav2Lip
 
 # Install requirements
 RUN pip install --upgrade pip setuptools wheel
-# Install PyTorch components separately to prevent OOM on constrained deployment servers
-RUN pip install --no-cache-dir torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
-RUN pip install --no-cache-dir torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cpu
+# Install PyTorch architecture-aware (ARM64 doesn't exist on the PyTorch CPU index, it's on PyPI)
+RUN if [ "$(uname -m)" = "x86_64" ]; then \
+        pip install --no-cache-dir torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cpu; \
+    else \
+        pip install --no-cache-dir torch==2.1.0 torchvision==0.16.0; \
+    fi
 
 # Install the rest of the requirements
 RUN pip install --no-cache-dir \
