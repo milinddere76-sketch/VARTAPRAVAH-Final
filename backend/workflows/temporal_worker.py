@@ -69,7 +69,7 @@ class StreamWorkflow:
         logger.info("📡 [WORKFLOW] Stream Monitoring Active")
         await asyncio.sleep(3600) # Keep alive for 1 hour
 
-# --- WORKER ---
+from temporalio.worker import Worker, UnsandboxedWorkflowRunner
 
 async def main():
     # Connect to Temporal Server (assumed running in infra)
@@ -79,7 +79,8 @@ async def main():
         client,
         task_queue="vartapravah-queue",
         workflows=[NewsProductionWorkflow, StreamWorkflow],
-        activities=[fetch_news_activity, produce_script_activity, render_video_activity]
+        activities=[fetch_news_activity, produce_script_activity, render_video_activity],
+        workflow_runner=UnsandboxedWorkflowRunner()
     )
     
     logger.info("👷 [TEMPORAL] Worker started. Monitoring task queue...")
