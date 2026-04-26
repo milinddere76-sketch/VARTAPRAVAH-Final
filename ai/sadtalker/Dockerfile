@@ -39,10 +39,11 @@ RUN pip install numpy==1.26.4
 RUN pip install pillow==10.2.0
 
 # Install heavy AI packages manually (CPU versions for build stability)
-# Using CPU wheels to avoid huge image size and build timeouts
+# Install core AI libraries explicitly
 RUN pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+RUN pip install safetensors==0.4.1
 
-RUN pip install --no-cache-dir -r requirements.txt -vvv
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Make output directory
 RUN mkdir -p /app/output /app/checkpoints
