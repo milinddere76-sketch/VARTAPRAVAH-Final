@@ -1,12 +1,9 @@
-# --- VARTA PRAVAH: PRIMARY NODE (Hetzner) ---
-# Use: docker-compose up -d
-
 services:
   # --- BACKEND & DASHBOARD ---
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile # Use the root Dockerfile for better CI/CD compatibility
     container_name: vartapravah_backend
     restart: always
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
@@ -26,7 +23,7 @@ services:
   temporal_worker:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile
     container_name: vartapravah_temporal
     restart: always
     command: python -m backend.workflows.temporal_worker
@@ -55,6 +52,23 @@ services:
       - "18233:8233"
     depends_on:
       - postgres
+
+  # --- STREAMING RELAY ---
+  streamer:
+    build:
+      context: .
+      dockerfile: streaming/nginx/Dockerfile
+    container_name: vartapravah_streamer
+    restart: always
+    env_file: .env
+    environment:
+      - HETZNER_NODE_URL=${HETZNER_NODE_URL}
+      - YOUTUBE_STREAM_KEY=${YOUTUBE_STREAM_KEY}
+    volumes:
+      - ./logs:/app/logs
+    ports:
+      - "1935:1935"
+      - "18080:8080"
 
   # --- INFRASTRUCTURE ---
   postgres:
