@@ -45,7 +45,7 @@ services:
     container_name: vartapravah_temporal_server
     restart: always
     environment:
-      - DB=postgresql
+      - DB=postgres12
       - DB_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PWD=password
