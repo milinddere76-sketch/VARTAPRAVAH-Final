@@ -46,7 +46,7 @@ services:
       - DB_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PWD=password
-      - POSTGRES_SEEDS=vartapravah_postgres
+      - POSTGRES_SEEDS=postgres
     ports:
       - "7233:7233"
       - "18233:8233"
