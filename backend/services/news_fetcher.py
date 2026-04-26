@@ -1,6 +1,6 @@
 import requests
-from .. import config
-from ..utils.logger import logger
+from backend import config
+from backend.utils.logger import logger
 
 class NewsFetcher:
     def __init__(self):

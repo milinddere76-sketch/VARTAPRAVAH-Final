@@ -1,6 +1,6 @@
 import os
-from .. import config
-from ..utils.logger import logger
+from backend import config
+from backend.utils.logger import logger
 
 def create_video(sadtalker_video_path, output_path, headlines=None, is_breaking=False):
     """

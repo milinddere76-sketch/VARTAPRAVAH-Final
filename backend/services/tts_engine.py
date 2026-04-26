@@ -1,6 +1,6 @@
 import os
-from .. import config
-from ..utils.logger import logger
+from backend import config
+from backend.utils.logger import logger
 
 # Lazy import for Coqui TTS to prevent initialization errors if not needed
 tts_instance = None

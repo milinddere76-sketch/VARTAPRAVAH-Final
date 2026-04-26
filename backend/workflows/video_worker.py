@@ -2,11 +2,11 @@ import redis
 import json
 import time
 import os
-from .. import config
-from ..services.tts_engine import init_tts, generate_audio
-from ..services.sadtalker_engine import generate_ai_video
-from ..services.video_engine import VideoEngine
-from ..utils.logger import logger
+from backend import config
+from backend.services.tts_engine import init_tts, generate_audio
+from backend.services.sadtalker_engine import generate_ai_video
+from backend.services.video_engine import VideoEngine
+from backend.utils.logger import logger
 
 # Dedicated SadTalker Worker Configuration
 r = redis.Redis(host=config.REDIS_HOST, port=int(config.REDIS_PORT))

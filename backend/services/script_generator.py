@@ -1,7 +1,7 @@
 from groq import Groq
 import os
-from .. import config
-from ..utils.logger import logger
+from backend import config
+from backend.utils.logger import logger
 
 client = Groq(api_key=config.GROQ_API_KEY or os.getenv("GROQ_API_KEY"))
 
