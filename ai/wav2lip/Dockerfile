@@ -2,6 +2,8 @@ FROM python:3.9-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DEFAULT_TIMEOUT=1000
 
 RUN apt-get update && apt-get install -y \
     build-essential gcc ffmpeg git wget libgl1 libglib2.0-0 \
@@ -16,8 +18,9 @@ WORKDIR /app/Wav2Lip
 
 # Install requirements
 RUN pip install --upgrade pip setuptools wheel
-# Install PyTorch from CPU wheel first
-RUN pip install --no-cache-dir torch==2.0.1+cpu torchvision==0.15.2+cpu torchaudio==2.0.2+cpu --index-url https://download.pytorch.org/whl/cpu
+# Install PyTorch components separately to prevent OOM on constrained deployment servers
+RUN pip install torch==2.0.1+cpu --index-url https://download.pytorch.org/whl/cpu
+RUN pip install torchvision==0.15.2+cpu --index-url https://download.pytorch.org/whl/cpu
 
 # Install the rest of the requirements
 RUN pip install --no-cache-dir \
