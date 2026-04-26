@@ -1,0 +1,20 @@
+# --- VARTA PRAVAH: RELAY NODE (Oracle) ---
+# Use: docker-compose -f docker-compose.relay.yml up -d
+
+services:
+  # --- STREAMING RELAY ---
+  streamer:
+    build:
+      context: .
+      dockerfile: streaming/nginx/Dockerfile
+    container_name: vartapravah_streamer
+    restart: always
+    env_file: .env
+    environment:
+      - HETZNER_NODE_URL=${HETZNER_NODE_URL}
+      - YOUTUBE_STREAM_KEY=${YOUTUBE_STREAM_KEY}
+    volumes:
+      - ./logs:/app/logs
+    ports:
+      - "1935:1935"
+      - "18080:8080"

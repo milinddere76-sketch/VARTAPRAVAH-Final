@@ -48,16 +48,16 @@ sudo apt-get install -y docker.io docker-compose git curl
 ### 1. Deploying the Primary Node (Hetzner)
 On the server intended for AI processing:
 ```bash
-docker-compose --profile primary up -d --build
+docker-compose up -d --build
 ```
-*This starts the AI engine, database, and Temporal orchestrator.*
+*This starts the AI production engine, database, and Temporal workers.*
 
 ### 2. Deploying the Relay Node (Oracle)
 On the server intended for streaming:
 ```bash
-docker-compose --profile relay up -d --build
+docker-compose -f docker-compose.relay.yml up -d --build
 ```
-*This starts only the Nginx-RTMP gateway and the relay engine. Ensure HETZNER_NODE_URL is set correctly in .env.*
+*This starts only the lightweight streaming engine and Nginx-RTMP gateway.*
 
 ---
 
