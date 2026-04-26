@@ -1,0 +1,23 @@
+# AI Artifacts
+output/
+videos/
+sadtalker_video/
+temp_audio/
+
+# System & Logs
+logs/
+*.log
+.env
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+postgres_data/
+redis_data/
+
+# Assets (Optional: large files can be excluded or kept)
+# assets/promo.mp4

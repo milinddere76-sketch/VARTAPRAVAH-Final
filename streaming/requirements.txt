@@ -1,0 +1,2 @@
+# Streamer service - minimal dependencies
+# Uses shell scripts and ffmpeg for streaming

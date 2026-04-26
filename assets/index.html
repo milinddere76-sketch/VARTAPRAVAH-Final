@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>वार्ता प्रवाह | Enterprise News Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF4B2B;
+            --secondary: #FF416C;
+            --dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --accent: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', 'Noto Sans Devanagari', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding: 40px 20px;
+            z-index: 100;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .logo-container img {
+            width: 80px;
+            filter: drop-shadow(0 0 10px var(--primary));
+        }
+
+        .logo-container h1 {
+            font-weight: 800;
+            font-size: 1.5rem;
+            margin-top: 15px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #94a3b8;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255,255,255,0.05);
+            color: white;
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            padding: 40px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .pulse {
+            width: 10px;
+            height: 10px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, transparent 50%, rgba(255,75,43,0.1) 100%);
+        }
+
+        .stat-card h3 {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        /* Video Preview */
+        .video-container {
+            background: var(--card-bg);
+            border-radius: 32px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+
+        .video-player {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Control Buttons */
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 18px 35px;
+            border-radius: 16px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 10px 20px -5px rgba(255,75,43,0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px -5px rgba(255,75,43,0.6);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: white;
+        }
+
+        /* Dynamic Marathi Headlines */
+        .headlines-ticker {
+            margin-top: 30px;
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 12px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .ticker-content {
+            display: inline-block;
+            animation: ticker 30s linear infinite;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo-container">
+            <img src="/static/logo.png" alt="Varta Pravah">
+            <h1>वार्ता प्रवाह</h1>
+        </div>
+        <div class="nav-item active">📊 डॅशबोर्ड</div>
+        <div class="nav-item">📰 ताज्या बातम्या</div>
+        <div class="nav-item">🎥 स्ट्रीमिंग</div>
+        <div class="nav-item">⚙️ सेटिंग्स</div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h2 style="font-size: 2rem; font-weight: 800;">एंटरप्राइझ डॅशबोर्ड</h2>
+                <p style="color: #94a3b8;">Real-time AI News Orchestration</p>
+            </div>
+            <div class="status-badge">
+                <div class="pulse"></div>
+    LIVE STREAMING
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>एकूण व्हिडिओ</h3>
+                <div class="value" id="stat-videos">1,284</div>
+            </div>
+            <div class="stat-card">
+                <h3>थेट प्रेक्षक</h3>
+                <div class="value" id="stat-viewers" style="color: var(--accent);">8,432</div>
+            </div>
+            <div class="stat-card">
+                <h3>अनुमानित महसूल</h3>
+                <div class="value" id="stat-revenue" style="color: #4ade80;">$192.40</div>
+            </div>
+            <div class="stat-card">
+                <h3>सिस्टम हेल्थ</h3>
+                <div class="value" style="color: #4ade80;">99.8%</div>
+            </div>
+        </div>
+
+        <div class="video-container">
+            <div class="video-player">
+                <video id="latest-bulletin" controls style="width: 100%; border-radius: 15px;">
+                    <source src="/videos/placeholder.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div class="headlines-ticker">
+                <div class="ticker-content" id="ticker">
+                    • महाराष्ट्रात पावसाचा जोर वाढणार • नवीन कृषी धोरण जाहीर • आंतरराष्ट्रीय बाजारात सोन्याचे दर स्थिर • वार्ता प्रवाह २४/७ तुमच्या सेवेत...
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="forceGenerate()">
+                🚀 फोर्स जनरेट बुलेटिन
+            </button>
+            <button class="btn btn-outline" onclick="toggleStream('start')">
+                ▶️ स्ट्रीम सुरू करा
+            </button>
+            <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444;" onclick="toggleStream('stop')">
+                ⏹️ थांबवा
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function updateStats() {
+            try {
+                const res = await fetch('/api/analytics');
+                const data = await res.json();
+                document.getElementById('stat-videos').innerText = data.videos_generated;
+                document.getElementById('stat-viewers').innerText = data.live_viewers;
+                document.getElementById('stat-revenue').innerText = data.revenue;
+            } catch(e) {}
+        }
+
+        async function fetchLatestVideo() {
+            try {
+                const res = await fetch('/api/latest-video');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    const video = document.getElementById('latest-bulletin');
+                    video.src = data.video_url;
+                }
+            } catch(e) {}
+        }
+
+        async function forceGenerate() {
+            const btn = event.target;
+            btn.innerText = "⏳ जनरेट होत आहे...";
+            try {
+                const res = await fetch('/news/force-generate', { method: 'POST' });
+                const data = await res.json();
+                alert("बुलेटिन जनरेशन सुरू झाले! ID: " + data.workflow_id);
+            } catch(e) {
+                alert("त्रुटी आली!");
+            }
+            btn.innerText = "🚀 फोर्स जनरेट बुलेटिन";
+        }
+
+        async function toggleStream(action) {
+            try {
+                const res = await fetch(`/stream/${action}`);
+                const data = await res.json();
+                alert("स्ट्रीम " + (action === 'start' ? 'सुरू' : 'बंद') + " झाली!");
+            } catch(e) {}
+        }
+
+        // Auto-refresh stats
+        setInterval(updateStats, 5000);
+        setInterval(fetchLatestVideo, 30000);
+        updateStats();
+        fetchLatestVideo();
+    </script>
+</body>
+</html>

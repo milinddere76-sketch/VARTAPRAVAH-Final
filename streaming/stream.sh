@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# Configuration
+HETZNER_URL=${HETZNER_NODE_URL:-"http://hetzner-ip:8000"}
+LOCAL_FALLBACK="/app/assets/promo.mp4"
+AD_SLOT="/app/assets/promo.mp4"
+DOWNLOAD_PATH="/app/videos/latest_news.mp4"
+LOG_FILE="/app/logs/streamer.log"
+LAST_FILENAME=""
+NEWS_COUNTER=0
+
+mkdir -p /app/videos /app/logs
+
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+echo "📡 [$(date)] [STREAMER] VartaPravah Ingest Started."
+
+if [ -z "$YOUTUBE_STREAM_KEY" ]; then
+    echo "❌ [FATAL] YOUTUBE_STREAM_KEY missing"
+    exit 1
+fi
+
+while true
+do
+  # 1. Commercial Logic
+  if [ "$NEWS_COUNTER" -ge 2 ]; then
+    echo "📺 [$(date)] [PROMO] Starting break..."
+    SOURCE="$AD_SLOT"
+    NEWS_COUNTER=0
+  else
+    # 2. Poll logic
+    RESPONSE=$(curl -s --max-time 10 "$HETZNER_URL/api/latest-video")
+    STATUS=$(echo $RESPONSE | grep -o '"status":"success"')
+    
+    if [ ! -z "$STATUS" ]; then
+      NEW_FILENAME=$(echo $RESPONSE | grep -oP '"filename":"\K[^"]+')
+      VIDEO_URL=$(echo $RESPONSE | grep -oP '"video_url":"\K[^"]+')
+      
+      if [ "$NEW_FILENAME" != "$LAST_FILENAME" ]; then
+        curl -s "$HETZNER_URL$VIDEO_URL" -o "${DOWNLOAD_PATH}.tmp"
+        if [ $? -eq 0 ]; then
+          mv "${DOWNLOAD_PATH}.tmp" "$DOWNLOAD_PATH"
+          SOURCE="$DOWNLOAD_PATH"
+          LAST_FILENAME="$NEW_FILENAME"
+          NEWS_COUNTER=$((NEWS_COUNTER + 1))
+        else
+          echo "⚠️ [$(date)] [DOWNLOAD] Failed for $NEW_FILENAME"
+          SOURCE="$LOCAL_FALLBACK"
+        fi
+      else
+        SOURCE="$DOWNLOAD_PATH"
+        [ ! -f "$SOURCE" ] && SOURCE="$LOCAL_FALLBACK"
+      fi
+    else
+      echo "🛡️ [$(date)] [CONNECTION] Primary Node Unreachable"
+      SOURCE="$LOCAL_FALLBACK"
+    fi
+  fi
+
+  # 3. Persistent Broadcast
+  echo "🚀 [$(date)] [BROADCAST] Source: $(basename $SOURCE)"
+  
+  # Redirecting FFmpeg stderr to log file for troubleshooting
+  ffmpeg -re -i "$SOURCE" \
+    -c:v libx264 -preset superfast -tune zerolatency \
+    -maxrate 3000k -bufsize 6000k \
+    -pix_fmt yuv420p -g 50 -r 25 \
+    -c:a aac -b:a 128k -ar 44100 \
+    -fflags +genpts \
+    -f flv "rtmp://localhost/live/stream" 2>> "$LOG_FILE"
+
+  if [ $? -ne 0 ]; then
+    echo "🚨 [$(date)] [FFMPEG] Process crashed or disconnected. Self-healing in 2s..."
+  fi
+  
+  sleep 2
+done
