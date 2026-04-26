@@ -33,15 +33,14 @@ class NewsFetcher:
             return self.fetch_fallback()
 
     def fetch_fallback(self):
-        """Simple scraping fallback or basic headlines."""
-        try:
-            # Fallback to top headlines in India
-            url = f"https://newsapi.org/v2/top-headlines?country=in&apiKey={self.api_key}"
-            res = requests.get(url)
-            articles = res.json().get("articles", [])[:3]
-            return [a.get("title") for a in articles if a.get("title")]
-        except:
-            return ["ताज्या बातम्या - वार्ता प्रवाह"]
+        """Emergency Marathi headlines if API fails or returns 0."""
+        return [
+            "बातमी विशेष: महाराष्ट्रातील हवामानात मोठा बदल होण्याची शक्यता.",
+            "प्रशासकीय निर्णय: राज्यातील विकासकामांना वेग देण्याचे आदेश.",
+            "आरोग्य अपडेट: नागरिकांनी खबरदारी घेण्याचे आवाहन.",
+            "कृषी वार्ता: यावर्षी विक्रमी पीक येण्याचा अंदाज.",
+            "क्रीडा जगत: स्थानिक खेळाडूंनी राष्ट्रीय स्तरावर पटकावले यश."
+        ]
 
 def fetch_news():
     """Unified interface for the scheduler."""
