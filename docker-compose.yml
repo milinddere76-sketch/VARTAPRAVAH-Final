@@ -1,11 +1,10 @@
 services:
-  # --- PRIMARY NODE SERVICES (Hetzner) ---
+  # --- BACKEND & DASHBOARD ---
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: vartapravah_backend
-    profiles: ["primary"]
     restart: always
     command: uvicorn main:app --host 0.0.0.0 --port 8000
     ports:
@@ -20,12 +19,12 @@ services:
       - redis
       - temporal
 
+  # --- TEMPORAL WORKER (Workflow Orchestrator) ---
   temporal_worker:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: vartapravah_temporal
-    profiles: ["primary"]
     restart: always
     command: python workflows/temporal_worker.py
     env_file: .env
@@ -37,10 +36,10 @@ services:
       - temporal
       - postgres
 
+  # --- TEMPORAL SERVER (Auto Setup) ---
   temporal:
     image: temporalio/auto-setup:latest
     container_name: vartapravah_temporal_server
-    profiles: ["primary"]
     restart: always
     environment:
       - DB=postgresql
@@ -54,10 +53,27 @@ services:
     depends_on:
       - postgres
 
+  # --- STREAMING RELAY ---
+  streamer:
+    build:
+      context: ./streaming/nginx
+      dockerfile: Dockerfile
+    container_name: vartapravah_streamer
+    restart: always
+    env_file: .env
+    environment:
+      - HETZNER_NODE_URL=${HETZNER_NODE_URL}
+      - YOUTUBE_STREAM_KEY=${YOUTUBE_STREAM_KEY}
+    volumes:
+      - ./logs:/app/logs
+    ports:
+      - "1935:1935"
+      - "8080:8080"
+
+  # --- INFRASTRUCTURE ---
   postgres:
     image: postgres:15
     container_name: vartapravah_postgres
-    profiles: ["primary"]
     restart: always
     environment:
       POSTGRES_DB: vartapravah
@@ -69,28 +85,9 @@ services:
   redis:
     image: redis:7
     container_name: vartapravah_redis
-    profiles: ["primary"]
     restart: always
     ports:
       - "6379:6379"
-
-  # --- RELAY NODE SERVICES (Oracle) ---
-  streamer:
-    build:
-      context: ./streaming/nginx
-      dockerfile: Dockerfile
-    container_name: vartapravah_streamer
-    profiles: ["relay"]
-    restart: always
-    env_file: .env
-    environment:
-      - HETZNER_NODE_URL=${HETZNER_NODE_URL}
-      - YOUTUBE_STREAM_KEY=${YOUTUBE_STREAM_KEY}
-    volumes:
-      - ./logs:/app/logs
-    ports:
-      - "1935:1935"
-      - "8080:8080"
 
 volumes:
   postgres_data:
