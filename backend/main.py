@@ -21,10 +21,11 @@ app.include_router(news.router)
 r = redis.Redis(host=config.REDIS_HOST, port=int(config.REDIS_PORT))
 
 # Serve static files and videos
-# Assets are in /app/assets, output is in /app/output
-static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets")
-output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "output")
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+static_dir = os.path.join(backend_dir, "static")
+output_dir = os.path.join(os.path.dirname(backend_dir), "output")
 
+# Mount static and video folders
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 if not os.path.exists(output_dir):
@@ -36,7 +37,7 @@ def read_dashboard():
     index_path = os.path.join(static_dir, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
-    return {"message": "Dashboard available at /api/analytics"}
+    return {"message": "Visual Dashboard coming soon. Access analytics at /api/analytics"}
 
 @app.get("/health")
 def health_check():

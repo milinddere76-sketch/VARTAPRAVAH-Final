@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VARTA PRAVAH | AI Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+Marathi:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff3e3e;
+            --bg: #0a0a0c;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --glass: rgba(255, 255, 255, 0.03);
+            --accent: #ff8e3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', 'Noto Sans Marathi', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 62, 62, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 142, 60, 0.05) 0%, transparent 40%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            padding: 2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .status-badge {
+            background: rgba(0, 255, 128, 0.1);
+            color: #00ff80;
+            padding: 0.5rem 1.2rem;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(0, 255, 128, 0.2);
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: #00ff80;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 128, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 255, 128, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 128, 0); }
+        }
+
+        .container {
+            padding: 0 5% 5rem 5%;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 1.5rem;
+            backdrop-filter: blur(20px);
+        }
+
+        .stream-container {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .stream-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #fff, #999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .news-feed {
+            margin-top: 2rem;
+        }
+
+        .news-item {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .news-item:last-child { border: none; }
+
+        .tag {
+            background: var(--primary);
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (max-width: 1100px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">VARTA<span>PRAVAH</span> AI</div>
+        <div class="status-badge">
+            <div class="pulse"></div>
+            सिस्टम ऑनलाइन आहे
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="grid">
+            <!-- Left Side: Live Stream -->
+            <div class="card">
+                <h2>🔴 थेट प्रक्षेपण (Live Stream)</h2>
+                <div class="stream-container">
+                    <iframe src="https://www.youtube.com/embed/live_stream?channel=UCYOURCHANNELID" allowfullscreen></iframe>
+                </div>
+                <div class="news-feed">
+                    <h2>📰 सक्रिय बातम्या (Active Feed)</h2>
+                    <div id="news-list">
+                        <div class="news-item"><span class="tag">AI</span> <span id="latest-news">बातमी लोड होत आहे...</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Stats & Metrics -->
+            <div class="stats-side">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="val-viewers">--</div>
+                        <div class="stat-label">थेट प्रेक्षक</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="val-videos">--</div>
+                        <div class="stat-label">व्युलेटिन तयार</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="val-uptime">24/7</div>
+                        <div class="stat-label">सिस्टम स्टेटस</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="val-revenue">--</div>
+                        <div class="stat-label">अंदाजित उत्पन्न</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 2rem;">
+                    <h2>⚙️ एआय इंजिन स्टेटस</h2>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span style="color: rgba(255,255,255,0.5);">SadTalker Node:</span>
+                            <span style="color: #00ff80;">ACTIVE</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span style="color: rgba(255,255,255,0.5);">Temporal Worker:</span>
+                            <span style="color: #00ff80;">RUNNING</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                            <span style="color: rgba(255,255,255,0.5);">Relay Station:</span>
+                            <span style="color: #00ff80;">CONNECTED</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function updateStats() {
+            try {
+                const response = await fetch('/api/analytics');
+                const data = await response.json();
+                
+                document.getElementById('val-viewers').innerText = data.live_viewers || '0';
+                document.getElementById('val-videos').innerText = data.videos_generated || '0';
+                document.getElementById('val-revenue').innerText = data.revenue || '$0';
+                
+                if (data.latest_video) {
+                    document.getElementById('latest-news').innerText = "नवीन बुलेटिन तयार झाले आहे: " + data.latest_video;
+                }
+            } catch (e) {
+                console.error("Dashboard refresh failed", e);
+            }
+        }
+
+        setInterval(updateStats, 5000);
+        updateStats();
+    </script>
+</body>
+</html>
