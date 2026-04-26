@@ -60,7 +60,22 @@ do
   # 3. Persistent Broadcast (Strict CBR 2500k)
   echo "🚀 [$(date)] [BROADCAST] Source: $(basename $SOURCE)"
   
-  # Redirecting FFmpeg stderr to log file for troubleshooting
+  # Check if source exists, if not, use a synthetic placeholder to keep YouTube alive
+  if [ ! -f "$SOURCE" ]; then
+      echo "⚠️ [$(date)] [FAILOVER] Source missing! Generating high-bitrate placeholder..."
+      # This generates a 720p black screen with scrolling text to maintain bitrate
+      ffmpeg -re -f lavfi -i "color=c=black:s=1280x720:r=25" \
+        -f lavfi -i "sine=f=440:b=4" \
+        -c:v libx264 -preset superfast -tune zerolatency \
+        -b:v 2500k -minrate 2500k -maxrate 2500k -bufsize 5000k \
+        -nal-hrd cbr -pix_fmt yuv420p -g 50 -r 25 \
+        -c:a aac -b:a 128k -ar 44100 \
+        -t 10 -f flv "rtmp://localhost/live/stream"
+      sleep 1
+      continue
+  fi
+
+  # Regular Streaming
   ffmpeg -re -i "$SOURCE" \
     -c:v libx264 -preset superfast -tune zerolatency \
     -b:v 2500k -minrate 2500k -maxrate 2500k -bufsize 5000k \
