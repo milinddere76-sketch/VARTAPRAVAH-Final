@@ -73,18 +73,16 @@ services:
     ports:
       - "6379:6379"
 
-  # --- AI RENDERING (SadTalker) ---
-  sadtalker:
+  # --- AI RENDERING (Wav2Lip) ---
+  wav2lip:
     build:
-      context: ./ai/sadtalker
+      context: ./ai/wav2lip
       dockerfile: Dockerfile
-    container_name: vartapravah_sadtalker
+    container_name: vartapravah_wav2lip
     restart: always
     volumes:
       - ./assets:/app/assets
       - ./output:/app/output
-      - ./ai/models:/app/SadTalker/checkpoints
-
 
 volumes:
   postgres_data:
