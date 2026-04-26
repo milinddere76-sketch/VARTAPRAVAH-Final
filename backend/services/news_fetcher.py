@@ -1,6 +1,6 @@
 import requests
-import config
-from utils.logger import logger
+from .. import config
+from ..utils.logger import logger
 
 class NewsFetcher:
     def __init__(self):

@@ -1,6 +1,6 @@
 import os
 import time
-from utils.logger import logger
+from ..utils.logger import logger
 
 def generate_ai_video(image, audio, job_id=None):
     """

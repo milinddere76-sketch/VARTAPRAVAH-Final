@@ -1,8 +1,8 @@
 import os
 import psycopg2
 from datetime import datetime
-import config
-from utils.logger import logger
+from . import config
+from .utils.logger import logger
 
 def get_db_connection():
     """Returns a connection to the PostgreSQL database."""

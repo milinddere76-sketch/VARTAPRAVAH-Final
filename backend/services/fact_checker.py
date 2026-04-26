@@ -1,6 +1,6 @@
 import requests
 import os
-import config
+from .. import config
 
 def fetch_sources(query):
     """
