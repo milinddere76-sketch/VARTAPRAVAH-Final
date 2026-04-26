@@ -57,14 +57,14 @@ do
     fi
   fi
 
-  # 3. Persistent Broadcast
+  # 3. Persistent Broadcast (Strict CBR 2500k)
   echo "🚀 [$(date)] [BROADCAST] Source: $(basename $SOURCE)"
   
   # Redirecting FFmpeg stderr to log file for troubleshooting
   ffmpeg -re -i "$SOURCE" \
     -c:v libx264 -preset superfast -tune zerolatency \
-    -maxrate 3000k -bufsize 6000k \
-    -pix_fmt yuv420p -g 50 -r 25 \
+    -b:v 2500k -minrate 2500k -maxrate 2500k -bufsize 5000k \
+    -nal-hrd cbr -pix_fmt yuv420p -g 50 -r 25 \
     -c:a aac -b:a 128k -ar 44100 \
     -fflags +genpts \
     -f flv "rtmp://localhost/live/stream" 2>> "$LOG_FILE"
