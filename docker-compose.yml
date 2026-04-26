@@ -84,13 +84,7 @@ services:
       - ./assets:/app/assets
       - ./output:/app/output
       - ./ai/models:/app/SadTalker/checkpoints
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+
 
 volumes:
   postgres_data:
