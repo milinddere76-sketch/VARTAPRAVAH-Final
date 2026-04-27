@@ -16,10 +16,10 @@ def generate_ai_video(image, audio, job_id=None):
     # Ensure paths are clean
     # IMPORTANT: We must pass paths that the TARGET (Wav2Lip) container understands
     image_filename = os.path.basename(str(image))
-    wav2lip_face_path = f"assets/{image_filename}" # Relative to Wav2Lip's /app
+    wav2lip_face_path = f"/app/assets/{image_filename}" 
     
     audio_filename = os.path.basename(str(audio))
-    wav2lip_audio_path = f"output/{audio_filename}" # Shared volume path
+    wav2lip_audio_path = f"/app/output/{audio_filename}" 
     
     result_path = f"/app/output/wav2lip_{job_id}.mp4"
     
@@ -38,8 +38,8 @@ def generate_ai_video(image, audio, job_id=None):
         
         # 2. Run Wav2Lip via Docker Exec
         exec_cmd = [
-            docker_bin, "exec", wav2lip_container, "python3", "inference.py",
-            "--checkpoint_path", "checkpoints/wav2lip_gan.pth",
+            docker_bin, "exec", wav2lip_container, "python3", "/app/Wav2Lip/inference.py",
+            "--checkpoint_path", "/app/Wav2Lip/checkpoints/wav2lip_gan.pth",
             "--face", wav2lip_face_path,
             "--audio", wav2lip_audio_path,
             "--outfile", result_path

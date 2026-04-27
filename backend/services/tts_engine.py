@@ -55,7 +55,7 @@ def generate_audio(text, file_path):
                 speed=1.1 # Slightly faster for 'energetic' TV tone
             )
             
-            if os.path.exists(file_path):
+            if os.path.exists(file_path) and os.path.getsize(file_path) > 1000:
                 return file_path
         except Exception as e:
             logger.warning(f"⚠️ [TTS] Neural synthesis failed, triggering gTTS fallback: {e}")
@@ -68,28 +68,28 @@ def generate_audio(text, file_path):
             from gtts import gTTS
             tts_fallback = gTTS(text=text, lang='mr', slow=False)
             tts_fallback.save(file_path)
+            
             # Check if file is valid (gTTS error pages are small, real audio is > 2KB)
             if os.path.exists(file_path) and os.path.getsize(file_path) > 2000:
                 return file_path
             else:
-                logger.warning(f"⚠️ [TTS] gTTS returned invalid/small file ({os.path.getsize(file_path) if os.path.exists(file_path) else 0} bytes).")
+                size = os.path.getsize(file_path) if os.path.exists(file_path) else 0
+                logger.warning(f"⚠️ [TTS] gTTS invalid file ({size} bytes). Deleting.")
+                if os.path.exists(file_path): os.remove(file_path)
         except Exception as e:
+            logger.warning(f"⚠️ [TTS] gTTS Attempt {attempt+1} failed: {e}")
+            if os.path.exists(file_path): os.remove(file_path)
             if "429" in str(e):
-                wait_time = (attempt + 1) * 2
-                logger.warning(f"⚠️ [TTS] gTTS Rate Limited (429). Retrying in {wait_time}s...")
-                time.sleep(wait_time)
-            else:
-                logger.error(f"❌ [TTS] gTTS Error: {e}")
-                break
+                time.sleep((attempt + 1) * 2)
 
-    # Final emergency fallback: Use anchor_voice.wav as a placeholder if nothing else works
+    # Final emergency fallback: Use anchor_voice.wav
     from backend.services.video_engine import get_asset_path
     emergency_sample = get_asset_path("anchor_voice.wav")
     
     if os.path.exists(emergency_sample):
         import shutil
         shutil.copy(emergency_sample, file_path)
-        logger.warning(f"🚨 [TTS] TOTAL FAILURE. Using emergency voice sample for {file_path}")
+        logger.warning(f"🚨 [TTS] TOTAL FAILURE. Using emergency sample: {file_path}")
         return file_path
 
     return None
