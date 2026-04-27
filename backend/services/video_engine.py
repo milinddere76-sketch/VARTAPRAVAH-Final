@@ -4,9 +4,21 @@ from backend.utils.logger import logger
 
 import subprocess
 
+def get_asset_path(filename):
+    """Returns the path to an asset, checking the volume first and then internal fallback."""
+    paths = [
+        os.path.join("/app/assets", filename),
+        os.path.join("assets", filename),
+        os.path.join("/app/assets_internal", filename)  # Fallback
+    ]
+    for p in paths:
+        if os.path.exists(p):
+            return p
+    return os.path.join("/app/assets", filename)  # Default to volume path
+
 def create_video(sadtalker_video_path, output_path, headlines=None, is_breaking=False):
-    logo_path = os.path.join(config.ASSETS_DIR, "varta_logo.png")
-    studio_path = os.path.join(config.ASSETS_DIR, "studio.jpg")
+    logo_path = get_asset_path("varta_logo.png")
+    studio_path = get_asset_path("studio.jpg")
     
     # Check for Marathi font in multiple locations
     font_paths = [

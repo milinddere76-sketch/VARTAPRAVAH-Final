@@ -27,6 +27,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
 # Install ONLY runtime dependencies
+# Note: docker.io provides the 'docker' command for communication
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libgl1 \
@@ -45,6 +46,9 @@ ENV PATH=/root/.local/bin:$PATH
 
 # Copy the project files
 COPY . .
+
+# Internal fallback assets to ensure it works even if volume is empty
+RUN mkdir -p /app/assets_internal && cp -r /app/assets/* /app/assets_internal/ || true
 
 # Default to running the backend
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,15 +1,17 @@
 import os
 import time
-from backend.utils.logger import logger
-
 import subprocess
-import time
 from backend.utils.logger import logger
+from backend.services.video_engine import get_asset_path
 
 def generate_ai_video(image, audio, job_id=None):
     if not job_id:
         import uuid
         job_id = str(uuid.uuid4())[:8]
+
+    # Handle image fallback
+    if image and ("anchor_female" in str(image) or "anchor_male" in str(image)):
+         image = get_asset_path(os.path.basename(image))
 
     logger.info(f"🎭 [WAV2LIP] Starting AI Synthesis for Job: {job_id}")
 
