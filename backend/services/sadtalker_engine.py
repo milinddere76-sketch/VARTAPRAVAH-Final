@@ -22,7 +22,8 @@ def generate_ai_video(image, audio, job_id=None):
     
     # 1. Find Wav2Lip Container
     try:
-        container_cmd = ["docker", "ps", "--format", "{{.Names}}"]
+        docker_bin = "/usr/bin/docker" if os.path.exists("/usr/bin/docker") else "docker"
+        container_cmd = [docker_bin, "ps", "--format", "{{.Names}}"]
         result = subprocess.run(container_cmd, capture_output=True, text=True)
         containers = [c.strip() for c in result.stdout.split('\n') if 'wav2lip' in c]
         
@@ -34,7 +35,7 @@ def generate_ai_video(image, audio, job_id=None):
         
         # 2. Run Wav2Lip via Docker Exec
         exec_cmd = [
-            "docker", "exec", wav2lip_container, "python3", "inference.py",
+            docker_bin, "exec", wav2lip_container, "python3", "inference.py",
             "--checkpoint_path", "checkpoints/wav2lip_gan.pth",
             "--face", image,
             "--audio", audio,

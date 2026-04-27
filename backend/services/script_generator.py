@@ -44,9 +44,28 @@ def generate_script(news_content):
         return response.choices[0].message.content
     except Exception as e:
         logger.error(f"Groq Script Generation Error: {e}")
-        # Ultimate Fallback: Just read the raw news items if AI script generation fails
-        fallback_script = "ताज्या घडामोडी: " + news_content.replace('---', '')
-        return fallback_script
+        return _generate_with_gemini(news_content)
+
+def _generate_with_gemini(news_content):
+    """Fallback to Gemini if Groq fails."""
+    logger.info("📡 [FALLBACK] Using Gemini for script generation...")
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=config.GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        prompt = f"तुम्ही एक अनुभवी मराठी न्यूज अँकर आहात. खालील बातम्यांवर आधारित एक आकर्षक न्यूज बुलेटिन तयार करा:\n\n{news_content}\n\nनियम:\n१. फक्त मराठीत लिहा.\n२. 'नमस्कार, मी आपली अँकर...' ने सुरुवात करा.\n३. प्रत्येक बातमी सविस्तर लिहा."
+        
+        response = model.generate_content(prompt)
+        if response.text:
+            logger.info("✅ [GEMINI] Script generated successfully.")
+            return response.text
+    except Exception as e:
+        logger.error(f"❌ [GEMINI] Error: {e}")
+        
+    # Ultimate Fallback: Just read the raw news items if all AI script generation fails
+    fallback_script = "ताज्या घडामोडी: " + str(news_content).replace('---', '')
+    return fallback_script
 
 class ScriptGenerator:
     def generate_marathi_script(self, news_items):
