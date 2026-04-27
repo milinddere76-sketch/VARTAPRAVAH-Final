@@ -1,49 +1,50 @@
-# This Dockerfile is at the root to improve compatibility with CI/CD tools like Coolify
-# It builds the Varta Pravah backend/dashboard service.
-
-FROM python:3.10-slim
+# --- STAGE 1: BUILDER ---
+FROM python:3.10-slim AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PIP_NO_CACHE_DIR=1
-ENV PIP_DEFAULT_TIMEOUT=1000
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install required system libraries
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
     g++ \
     libpq-dev \
     libjpeg-dev \
     zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY backend/requirements.txt .
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# --- STAGE 2: RUNTIME ---
+FROM python:3.10-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# Install ONLY runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libgl1 \
     libglib2.0-0 \
+    libpq5 \
     curl \
-    git \
     docker.io \
-    fonts-noto-core \
-    fonts-noto-extra \
-    fonts-noto-ui-extra \
+    fonts-noto-ui-core \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy requirements from the backend folder
-COPY backend/requirements.txt .
+# Copy installed packages from builder
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
 
-# Install Python dependencies
-RUN pip install --upgrade pip setuptools wheel
-RUN pip install numpy==1.26.4
-RUN pip install pillow==10.2.0
-
-RUN pip install --no-cache-dir -r requirements.txt -vvv
-
-# Copy the entire project context
+# Copy the project files
 COPY . .
-
-ENV PYTHONPATH=/app
 
 # Default to running the backend
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

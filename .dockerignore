@@ -6,3 +6,12 @@ checkpoints/
 .venv/
 __pycache__/
 *.pyc
+assets/
+*.mp4
+*.wav
+*.mp3
+.env
+.dockerignore
+Dockerfile.old
+README.md
+docs/
