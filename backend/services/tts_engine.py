@@ -61,15 +61,33 @@ def generate_audio(text, file_path):
             logger.warning(f"⚠️ [TTS] Neural synthesis failed, triggering gTTS fallback: {e}")
 
     # --- FALLBACK: gTTS ---
-    try:
-        logger.info("🛡️ [TTS] Using gTTS Fallback for Marathi audio...")
-        from gtts import gTTS
-        tts_fallback = gTTS(text=text, lang='mr', slow=False)
-        tts_fallback.save(file_path)
+    import time
+    for attempt in range(3):
+        try:
+            logger.info(f"🛡️ [TTS] Using gTTS Fallback for Marathi audio (Attempt {attempt+1})...")
+            from gtts import gTTS
+            tts_fallback = gTTS(text=text, lang='mr', slow=False)
+            tts_fallback.save(file_path)
+            if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+                return file_path
+        except Exception as e:
+            if "429" in str(e):
+                wait_time = (attempt + 1) * 2
+                logger.warning(f"⚠️ [TTS] gTTS Rate Limited (429). Retrying in {wait_time}s...")
+                time.sleep(wait_time)
+            else:
+                logger.error(f"❌ [TTS] gTTS Error: {e}")
+                break
+
+    # Final emergency fallback: Use anchor_voice.wav as a placeholder if nothing else works
+    emergency_sample = os.path.join(config.ASSETS_DIR, "anchor_voice.wav")
+    if os.path.exists(emergency_sample):
+        import shutil
+        shutil.copy(emergency_sample, file_path)
+        logger.warning(f"🚨 [TTS] TOTAL FAILURE. Using emergency voice sample for {file_path}")
         return file_path
-    except Exception as e:
-        logger.error(f"❌ [TTS] All synthesis methods failed: {e}")
-        return None
+
+    return None
 
 class TTSEngine:
     def generate_audio(self, text, output_path):

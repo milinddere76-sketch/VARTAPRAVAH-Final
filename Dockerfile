@@ -24,6 +24,8 @@ RUN apt-get update && apt-get install -y \
     git \
     docker.io \
     fonts-noto-core \
+    fonts-noto-extra \
+    fonts-noto-ui-extra \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
