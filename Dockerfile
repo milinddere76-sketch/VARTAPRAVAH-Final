@@ -27,16 +27,21 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
 # Install ONLY runtime dependencies
-# Note: docker.io provides the 'docker' command for communication
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libgl1 \
     libglib2.0-0 \
     libpq5 \
     curl \
-    docker.io \
+    ca-certificates \
     fonts-noto-ui-core \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Docker CLI manually (Static Binary for maximum reliability)
+RUN curl -fsSL https://download.docker.com/linux/static/stable/aarch64/docker-24.0.7.tgz | tar -xzC /tmp && \
+    mv /tmp/docker/docker /usr/local/bin/docker && \
+    chmod +x /usr/local/bin/docker && \
+    rm -rf /tmp/docker
 
 WORKDIR /app
 

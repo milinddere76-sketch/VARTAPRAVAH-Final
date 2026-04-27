@@ -80,7 +80,9 @@ def generate_audio(text, file_path):
                 break
 
     # Final emergency fallback: Use anchor_voice.wav as a placeholder if nothing else works
-    emergency_sample = os.path.join(config.ASSETS_DIR, "anchor_voice.wav")
+    from backend.services.video_engine import get_asset_path
+    emergency_sample = get_asset_path("anchor_voice.wav")
+    
     if os.path.exists(emergency_sample):
         import shutil
         shutil.copy(emergency_sample, file_path)
