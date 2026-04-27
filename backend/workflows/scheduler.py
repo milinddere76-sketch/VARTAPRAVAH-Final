@@ -51,6 +51,7 @@ def main():
             logger.info(f"🕒 Slot: {bulletin_type}")
             
             # 1. Fetch fresh news
+            logger.info("📡 [SCHEDULER] Triggering fresh news pull from API...")
             raw_articles = fetch_news()
             verified_new = []
 

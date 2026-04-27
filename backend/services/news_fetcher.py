@@ -8,11 +8,13 @@ class NewsFetcher:
 
     def fetch_all_categories(self):
         """Fetches news from Maharashtra, National, and International sources."""
+        logger.info("📡 [NEWS-API] Pulling fresh news articles from all categories...")
         results = {
             "maharashtra": self.fetch_by_query("Maharashtra Marathi News"),
             "national": self.fetch_by_query("India National News"),
             "international": self.fetch_by_query("World News International")
         }
+        logger.info(f"✅ [NEWS-API] Pulling complete. (MH: {len(results['maharashtra'])}, IN: {len(results['national'])}, INT: {len(results['international'])})")
         return results
 
     def fetch_by_query(self, query):

@@ -1,7 +1,6 @@
 output/
 logs/
 .git/
-assets/
 ai/
 checkpoints/
 .venv/

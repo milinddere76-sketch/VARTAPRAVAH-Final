@@ -28,34 +28,39 @@ do
     SOURCE="$AD_SLOT"
     NEWS_COUNTER=0
   else
-    # 2. Poll logic
-    RESPONSE=$(curl -s --max-time 10 "$HETZNER_URL/api/latest-video")
-    STATUS=$(echo $RESPONSE | grep -o '"status":"success"')
-    
-    if [ ! -z "$STATUS" ]; then
-      NEW_FILENAME=$(echo $RESPONSE | grep -oP '"filename":"\K[^"]+')
-      VIDEO_URL=$(echo $RESPONSE | grep -oP '"video_url":"\K[^"]+')
+      # 2. Poll logic
+      RESPONSE=$(curl -s --max-time 10 "$HETZNER_URL/api/latest-video")
       
-      if [ "$NEW_FILENAME" != "$LAST_FILENAME" ]; then
-        curl -s "$HETZNER_URL$VIDEO_URL" -o "${DOWNLOAD_PATH}.tmp"
-        if [ $? -eq 0 ]; then
-          mv "${DOWNLOAD_PATH}.tmp" "$DOWNLOAD_PATH"
-          SOURCE="$DOWNLOAD_PATH"
-          LAST_FILENAME="$NEW_FILENAME"
-          NEWS_COUNTER=$((NEWS_COUNTER + 1))
+      if [ $? -ne 0 ]; then
+        echo "🛡️ [$(date)] [CONNECTION] Primary Node ($HETZNER_URL) Offline"
+        SOURCE="$LOCAL_FALLBACK"
+      elif echo "$RESPONSE" | grep -q '"status":"success"'; then
+        NEW_FILENAME=$(echo $RESPONSE | grep -oP '"filename":"\K[^"]+')
+        VIDEO_URL=$(echo $RESPONSE | grep -oP '"video_url":"\K[^"]+')
+        
+        if [ "$NEW_FILENAME" != "$LAST_FILENAME" ]; then
+          echo "📥 [$(date)] [NEW-VIDEO] Downloading $NEW_FILENAME..."
+          curl -s "$HETZNER_URL$VIDEO_URL" -o "${DOWNLOAD_PATH}.tmp"
+          if [ $? -eq 0 ]; then
+            mv "${DOWNLOAD_PATH}.tmp" "$DOWNLOAD_PATH"
+            SOURCE="$DOWNLOAD_PATH"
+            LAST_FILENAME="$NEW_FILENAME"
+            NEWS_COUNTER=$((NEWS_COUNTER + 1))
+            echo "✅ [$(date)] [READY] Bulletin Switched to $NEW_FILENAME"
+          else
+            echo "⚠️ [$(date)] [DOWNLOAD] Failed for $NEW_FILENAME"
+            SOURCE="$LOCAL_FALLBACK"
+          fi
         else
-          echo "⚠️ [$(date)] [DOWNLOAD] Failed for $NEW_FILENAME"
-          SOURCE="$LOCAL_FALLBACK"
+          SOURCE="$DOWNLOAD_PATH"
+          [ ! -f "$SOURCE" ] && SOURCE="$LOCAL_FALLBACK"
         fi
       else
-        SOURCE="$DOWNLOAD_PATH"
-        [ ! -f "$SOURCE" ] && SOURCE="$LOCAL_FALLBACK"
+        ERROR_MSG=$(echo $RESPONSE | grep -oP '"message":"\K[^"]+')
+        echo "⏳ [$(date)] [IDLE] Backend Online. Status: $ERROR_MSG (Waiting for first bulletin...)"
+        SOURCE="$LOCAL_FALLBACK"
       fi
-    else
-      echo "🛡️ [$(date)] [CONNECTION] Primary Node Unreachable"
-      SOURCE="$LOCAL_FALLBACK"
     fi
-  fi
 
   # 3. Persistent Broadcast (Strict CBR 2500k)
   echo "🚀 [$(date)] [BROADCAST] Source: $(basename $SOURCE)"
