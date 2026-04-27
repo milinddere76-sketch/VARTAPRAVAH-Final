@@ -19,17 +19,19 @@ def generate_ai_video(image, audio, job_id=None):
     WAV2LIP_CONTAINER=$(docker ps --format '{{{{.Names}}}}' | grep wav2lip | head -n 1)
     if [ -z "$WAV2LIP_CONTAINER" ]; then
         echo "Wav2Lip container not found!"
-        exit 256
+        exit 1
     fi
     docker exec $WAV2LIP_CONTAINER python3 inference.py \
     --checkpoint_path checkpoints/wav2lip_gan.pth \
-    --face {image} \
-    --audio {audio} \
-    --outfile {result_path}
+    --face "{image}" \
+    --audio "{audio}" \
+    --outfile "{result_path}"
     """
 
     # Try Wav2Lip
     logger.info("Executing Wav2Lip...")
+    # os.system returns status shifted by 8 bits, so exit 1 becomes 256. We need to check for == 0
+
     exit_status = os.system(cmd)
     
     if exit_status == 0:

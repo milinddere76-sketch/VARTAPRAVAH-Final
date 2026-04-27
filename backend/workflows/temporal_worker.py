@@ -15,22 +15,22 @@ from backend import config
 # --- ACTIVITIES ---
 
 @activity.defn
-async def fetch_news_activity() -> list:
+def fetch_news_activity() -> list:
     logger.info("🎬 [ACTIVITY] Fetching News...")
     return fetch_news()
 
 @activity.defn
-async def produce_script_activity(news: list) -> str:
+def produce_script_activity(news: list) -> str:
     logger.info("🎬 [ACTIVITY] Generating Script...")
     return generate_script("\n".join(news))
 
 @activity.defn
-async def render_video_activity(script: str) -> str:
+def render_video_activity(script: str) -> str:
     logger.info("🎬 [ACTIVITY] Rendering Video...")
     # This combines TTS + Sadtalker + Final Composition
     # Simplified for the workflow orchestration
     from backend.workflows.video_worker import process_task_direct
-    return await process_task_direct(script)
+    return process_task_direct(script)
 
 # --- WORKFLOWS ---
 
@@ -75,12 +75,14 @@ async def main():
     # Connect to Temporal Server (assumed running in infra)
     client = await Client.connect("temporal:7233")
     
+    import concurrent.futures
     worker = Worker(
         client,
         task_queue="vartapravah-queue",
         workflows=[NewsProductionWorkflow, StreamWorkflow],
         activities=[fetch_news_activity, produce_script_activity, render_video_activity],
-        workflow_runner=UnsandboxedWorkflowRunner()
+        workflow_runner=UnsandboxedWorkflowRunner(),
+        activity_executor=concurrent.futures.ThreadPoolExecutor(max_workers=5)
     )
     
     logger.info("👷 [TEMPORAL] Worker started. Monitoring task queue...")

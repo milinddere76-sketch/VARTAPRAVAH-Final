@@ -1,0 +1,9 @@
+output/
+logs/
+.git/
+assets/
+ai/
+checkpoints/
+.venv/
+__pycache__/
+*.pyc

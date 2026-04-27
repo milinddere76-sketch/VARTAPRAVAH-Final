@@ -17,7 +17,7 @@ os.makedirs(config.OUTPUT_DIR, exist_ok=True)
 logger.info("🎭 [SADTALKER-WORKER] Dedicated AI Face Engine starting...")
 init_tts()
 
-async def process_task_direct(script: str, anchor_type: str = "female", headlines: list = None, is_breaking: bool = False):
+def process_task_direct(script: str, anchor_type: str = "female", headlines: list = None, is_breaking: bool = False):
     if headlines is None:
         headlines = []
     

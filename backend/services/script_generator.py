@@ -17,6 +17,9 @@ def generate_script(news_content):
         if isinstance(news_content, list):
             news_content = "\n".join(news_content)
             
+        if not news_content or str(news_content).strip() == "":
+            return "नमस्कार, वार्ता प्रवाह मधे आपले स्वागत आहे. सध्या कोणतीही नवीन बातमी उपलब्ध नाही."
+            
         system_prompt = """
         तुम्ही 'वार्ता प्रवाह' या प्रतिष्ठित न्यूज चॅनेलचे मुख्य न्यूज अँकर आहात.
         खालील बातमीच्या मुद्द्यांचे एका व्यावसायिक टीव्ही न्यूज बुलेटिन स्क्रिप्टमध्ये रूपांतर करा.
