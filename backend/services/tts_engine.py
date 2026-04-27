@@ -68,8 +68,11 @@ def generate_audio(text, file_path):
             from gtts import gTTS
             tts_fallback = gTTS(text=text, lang='mr', slow=False)
             tts_fallback.save(file_path)
-            if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+            # Check if file is valid (gTTS error pages are small, real audio is > 2KB)
+            if os.path.exists(file_path) and os.path.getsize(file_path) > 2000:
                 return file_path
+            else:
+                logger.warning(f"⚠️ [TTS] gTTS returned invalid/small file ({os.path.getsize(file_path) if os.path.exists(file_path) else 0} bytes).")
         except Exception as e:
             if "429" in str(e):
                 wait_time = (attempt + 1) * 2

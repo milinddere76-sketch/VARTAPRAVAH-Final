@@ -13,11 +13,14 @@ def generate_ai_video(image, audio, job_id=None):
     if image and ("anchor_female" in str(image) or "anchor_male" in str(image)):
          image = get_asset_path(os.path.basename(image))
 
-    logger.info(f"🎭 [WAV2LIP] Starting AI Synthesis for Job: {job_id}")
-
     # Ensure paths are clean
-    image = str(image).strip()
-    audio = str(audio).strip()
+    # IMPORTANT: We must pass paths that the TARGET (Wav2Lip) container understands
+    image_filename = os.path.basename(str(image))
+    wav2lip_face_path = f"assets/{image_filename}" # Relative to Wav2Lip's /app
+    
+    audio_filename = os.path.basename(str(audio))
+    wav2lip_audio_path = f"output/{audio_filename}" # Shared volume path
+    
     result_path = f"/app/output/wav2lip_{job_id}.mp4"
     
     # 1. Find Wav2Lip Container
@@ -37,8 +40,8 @@ def generate_ai_video(image, audio, job_id=None):
         exec_cmd = [
             docker_bin, "exec", wav2lip_container, "python3", "inference.py",
             "--checkpoint_path", "checkpoints/wav2lip_gan.pth",
-            "--face", image,
-            "--audio", audio,
+            "--face", wav2lip_face_path,
+            "--audio", wav2lip_audio_path,
             "--outfile", result_path
         ]
         
