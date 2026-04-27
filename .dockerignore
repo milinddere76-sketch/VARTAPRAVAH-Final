@@ -1,12 +1,10 @@
 output/
 logs/
 .git/
-ai/
 checkpoints/
 .venv/
 __pycache__/
 *.pyc
-assets/
 *.mp4
 *.wav
 *.mp3
