@@ -15,6 +15,7 @@ WORKDIR /app
 RUN git clone https://github.com/Rudrabha/Wav2Lip.git /app/Wav2Lip
 
 WORKDIR /app/Wav2Lip
+RUN mkdir -p temp
 
 # Install requirements
 RUN pip install --upgrade pip wheel "setuptools<70.0.0"
