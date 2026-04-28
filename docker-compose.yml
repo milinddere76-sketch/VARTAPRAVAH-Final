@@ -18,7 +18,7 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 8000
 
   # ---------------------------
-  # BACKGROUND WORKER (AI TASKS)
+  # WORKER (AI + TTS + NEWS)
   # ---------------------------
   worker:
     build: .
@@ -32,17 +32,15 @@ services:
     command: python worker.py
 
   # ---------------------------
-  # REDIS (QUEUE / CACHE)
+  # REDIS
   # ---------------------------
   redis:
     image: redis:7
     container_name: vartapravah_redis
     restart: always
-    ports:
-      - "6379:6379"
 
   # ---------------------------
-  # POSTGRES (DATABASE)
+  # POSTGRES
   # ---------------------------
   postgres:
     image: postgres:15
@@ -54,11 +52,9 @@ services:
       POSTGRES_DB: vartapravah
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
   # ---------------------------
-  # TEMPORAL (WORKFLOW ENGINE)
+  # TEMPORAL (OPTIONAL BUT RECOMMENDED)
   # ---------------------------
   temporal:
     image: temporalio/auto-setup:1.24.2
@@ -72,11 +68,9 @@ services:
       POSTGRES_USER: root
       POSTGRES_PWD: password
       POSTGRES_SEEDS: postgres
-    ports:
-      - "7233:7233"
 
   # ---------------------------
-  # OPTIONAL: ENCODER (FFmpeg STREAMING)
+  # ENCODER (STREAM PUSH TO REMOTE SERVER)
   # ---------------------------
   encoder:
     build: .
@@ -87,6 +81,8 @@ services:
     depends_on:
       - backend
     command: python encoder.py
+    environment:
+      - STREAM_URL=${STREAM_URL}
 
 # ---------------------------
 # VOLUMES
