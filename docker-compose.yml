@@ -15,10 +15,11 @@ services:
     depends_on:
       - redis
       - postgres
+      - temporal
     command: uvicorn main:app --host 0.0.0.0 --port 8000
 
   # ---------------------------
-  # WORKER (AI + TTS + NEWS)
+  # TEMPORAL WORKER (FIXED PATH)
   # ---------------------------
   worker:
     build: .
@@ -29,7 +30,9 @@ services:
     depends_on:
       - redis
       - postgres
-    command: python worker.py
+      - temporal
+    # ✅ BEST PRACTICE (module mode)
+    command: python -m backend.workflows.temporal_worker
 
   # ---------------------------
   # REDIS
@@ -47,45 +50,14 @@ services:
     container_name: vartapravah_postgres
     restart: always
     environment:
-      POSTGRES_USER: root
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: vartapravah
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   # ---------------------------
-  # TEMPORAL (OPTIONAL BUT RECOMMENDED)
+  # TEMPORAL
   # ---------------------------
   temporal:
-    image: temporalio/auto-setup:1.24.2
-    container_name: vartapravah_temporal
-    restart: always
-    depends_on:
-      - postgres
-    environment:
-      DB: postgres12
-      DB_PORT: 5432
-      POSTGRES_USER: root
-      POSTGRES_PWD: password
-      POSTGRES_SEEDS: postgres
-
-  # ---------------------------
-  # ENCODER (STREAM PUSH TO REMOTE SERVER)
-  # ---------------------------
-  encoder:
-    build: .
-    container_name: vartapravah_encoder
-    restart: always
-    env_file:
-      - .env
-    depends_on:
-      - backend
-    command: python encoder.py
-    environment:
-      - STREAM_URL=${STREAM_URL}
-
-# ---------------------------
-# VOLUMES
-# ---------------------------
-volumes:
-  postgres_data:
+    image: temporal
