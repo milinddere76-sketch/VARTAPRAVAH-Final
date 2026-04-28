@@ -1,99 +1,92 @@
 import os
-from backend import config
-from backend.utils.logger import logger
+import time
+import logging
 
-# Lazy import for Coqui TTS to prevent initialization errors if not needed
-tts_instance = None
+logger = logging.getLogger("tts_engine")
+
+# =========================
+# CONFIG
+# =========================
+OUTPUT_DIR = "/tmp/tts"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+USE_COQUI = True   # PRIMARY ENGINE
+USE_GTTS = True    # FALLBACK
+
+MAX_RETRIES = 3
+
+# =========================
+# LOAD COQUI MODEL (ONCE)
+# =========================
+tts_model = None
 
 def init_tts():
-    """Initializes the Neural XTTS v2 engine with error resilience."""
-    global tts_instance
-    try:
-        from TTS.api import TTS
-        model_name = "tts_models/multilingual/multi-dataset/xtts_v2"
-        logger.info(f"🎙️ [TTS] Initializing Neural XTTS v2 ({model_name})...")
-        
-        # Check for GPU
-        device = "cuda" if os.getenv("USE_GPU") == "True" else "cpu"
-        tts_instance = TTS(model_name=model_name).to(device)
-        logger.info(f"✅ [TTS] Engine initialized on {device}")
-    except Exception as e:
-        logger.error(f"❌ [TTS] Coqui initialization failed: {e}")
-        tts_instance = "FAILED"
-
-def generate_audio(text, file_path):
-    """
-    Generates Marathi audio. 
-    1. Primary: Neural Coqui XTTS v2 for clear, energetic TV-style.
-    2. Fallback: gTTS for zero-downtime reliability.
-    """
-    global tts_instance
-    
-    if not text or str(text).strip() == "":
-        logger.warning("⚠️ [TTS] Received empty text. Using default fallback message.")
-        text = "नमस्कार, वार्ता प्रवाह मधे आपले स्वागत आहे. सध्या कोणतीही नवीन बातमी उपलब्ध नाही."
-
-    if tts_instance is None:
-        init_tts()
-
-    # --- PRIMARY: COQUI XTTS v2 ---
-    if tts_instance and tts_instance != "FAILED":
+    global tts_model
+    if USE_COQUI:
         try:
-            # We use a high-energy Marathi anchor sample for zero-shot cloning
-            anchor_sample = os.path.join(config.ASSETS_DIR, "anchor_voice.wav")
-            
-            # Use fallback sample if preferred one is missing
-            if not os.path.exists(anchor_sample):
-                anchor_sample = None # Coqui will use default speaker
-            
-            logger.info(f"🎙️ [TTS] Synthesizing Neural Marathi voice...")
-            tts_instance.tts_to_file(
-                text=text,
-                language="mr",
-                speaker_wav=anchor_sample,
-                file_path=file_path,
-                speed=1.1 # Slightly faster for 'energetic' TV tone
-            )
-            
-            if os.path.exists(file_path) and os.path.getsize(file_path) > 1000:
-                return file_path
+            from TTS.api import TTS
+            logger.info("🔊 Loading Coqui XTTS v2 model...")
+            tts_model = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2")
+            logger.info("✅ Coqui TTS loaded successfully")
         except Exception as e:
-            logger.warning(f"⚠️ [TTS] Neural synthesis failed, triggering gTTS fallback: {e}")
+            logger.error(f"❌ Coqui load failed: {e}")
+            tts_model = None
 
-    # --- FALLBACK: gTTS ---
-    import time
-    for attempt in range(3):
+# =========================
+# MAIN FUNCTION
+# =========================
+def generate_tts(text: str, voice="female"):
+    """
+    Returns: audio file path OR None
+    """
+
+    if not text or not text.strip():
+        logger.error("❌ Empty text received for TTS")
+        return None
+
+    filename = f"{int(time.time())}.wav"
+    output_path = os.path.join(OUTPUT_DIR, filename)
+
+    for attempt in range(MAX_RETRIES):
         try:
-            logger.info(f"🛡️ [TTS] Using gTTS Fallback for Marathi audio (Attempt {attempt+1})...")
-            from gtts import gTTS
-            tts_fallback = gTTS(text=text, lang='mr', slow=False)
-            tts_fallback.save(file_path)
-            
-            # Check if file is valid (gTTS error pages are small, real audio is > 2KB)
-            if os.path.exists(file_path) and os.path.getsize(file_path) > 2000:
-                return file_path
+            logger.info(f"🎙️ TTS Attempt {attempt+1}")
+
+            # =========================
+            # PRIMARY: COQUI XTTS
+            # =========================
+            if USE_COQUI and tts_model:
+                tts_model.tts_to_file(
+                    text=text,
+                    file_path=output_path,
+                    language="hi"  # Marathi works via Hindi phonetics
+                )
+
+            # =========================
+            # FALLBACK: gTTS
+            # =========================
+            elif USE_GTTS:
+                from gtts import gTTS
+                tts = gTTS(text=text, lang="hi")
+                tts.save(output_path)
+
             else:
-                size = os.path.getsize(file_path) if os.path.exists(file_path) else 0
-                logger.warning(f"⚠️ [TTS] gTTS invalid file ({size} bytes). Deleting.")
-                if os.path.exists(file_path): os.remove(file_path)
+                raise Exception("No TTS engine available")
+
+            # =========================
+            # VALIDATION
+            # =========================
+            if not os.path.exists(output_path):
+                raise Exception("Audio file not created")
+
+            if os.path.getsize(output_path) < 1000:
+                raise Exception("Audio file too small (corrupt)")
+
+            logger.info(f"✅ TTS SUCCESS: {output_path}")
+            return output_path
+
         except Exception as e:
-            logger.warning(f"⚠️ [TTS] gTTS Attempt {attempt+1} failed: {e}")
-            if os.path.exists(file_path): os.remove(file_path)
-            if "429" in str(e):
-                time.sleep((attempt + 1) * 2)
+            logger.error(f"❌ TTS Attempt {attempt+1} failed: {e}")
+            time.sleep(2)
 
-    # Final emergency fallback: Use anchor_voice.wav
-    from backend.services.video_engine import get_asset_path
-    emergency_sample = get_asset_path("anchor_voice.wav")
-    
-    if os.path.exists(emergency_sample):
-        import shutil
-        shutil.copy(emergency_sample, file_path)
-        logger.warning(f"🚨 [TTS] TOTAL FAILURE. Using emergency sample: {file_path}")
-        return file_path
-
+    logger.error("🚨 ALL TTS ATTEMPTS FAILED")
     return None
-
-class TTSEngine:
-    def generate_audio(self, text, output_path):
-        return generate_audio(text, output_path)
