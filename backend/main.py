@@ -11,6 +11,9 @@ from backend import config
 from backend.database import init_db, log_analytics
 from backend.routes import stream, news
 
+# ✅ ADD THIS IMPORT
+from tts_engine import init_tts
+
 app = FastAPI(title="VARTA PRAVAH ENTERPRISE DASHBOARD")
 
 # Include Routers
@@ -47,14 +50,11 @@ def health_check():
 
 @app.get("/api/latest-video")
 def get_latest_video():
-    """Returns the filename of the most recently generated bulletin."""
     try:
         files = [f for f in os.listdir(output_dir) if f.startswith("final_bulletin_") and f.endswith(".mp4")]
         if not files:
             return {"status": "error", "message": "No bulletins available"}
-        
-        # Sort by timestamp in filename (task_id is timestamp)
-        # Filename format: final_bulletin_123456789.mp4
+
         files.sort(key=lambda x: int(x.split("_")[-1].split(".")[0]), reverse=True)
         return {"status": "success", "video_url": f"/videos/{files[0]}", "filename": files[0]}
     except Exception as e:
@@ -66,12 +66,12 @@ def get_analytics():
         videos = int(r.get("stats_videos_generated") or 0)
         errors = int(r.get("stats_errors_count") or 0)
         revenue = round(videos * 0.15, 2)
-        
+
         log_analytics(videos, errors, revenue)
-        
+
         import random
         viewers = random.randint(500, 15000)
-        
+
         return {
             "live_viewers": f"{viewers:,}",
             "videos_generated": videos,
@@ -85,16 +85,27 @@ def get_analytics():
 def run_scheduler():
     scheduler_main()
 
+# ✅ UPDATED STARTUP EVENT
 @app.on_event("startup")
 async def startup_event():
     try:
         time.sleep(5)
-        init_db()
-    except:
-        print("⚠️ [DB] Connection failed on startup.")
 
+        # ✅ INIT DATABASE
+        init_db()
+
+        # 🔥 INIT TTS MODEL HERE (VERY IMPORTANT)
+        print("🔊 [TTS] Initializing...")
+        init_tts()
+        print("✅ [TTS] Ready")
+
+    except Exception as e:
+        print(f"⚠️ [STARTUP ERROR]: {e}")
+
+    # ✅ START SCHEDULER AFTER TTS IS READY
     thread = threading.Thread(target=run_scheduler, daemon=True)
     thread.start()
+
     print("🏢 [MAIN] Enterprise Dashboard & Scheduler started.")
 
 if __name__ == "__main__":
