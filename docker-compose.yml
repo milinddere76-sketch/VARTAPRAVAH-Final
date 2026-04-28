@@ -1,88 +1,61 @@
-services:
-  # --- BACKEND & DASHBOARD ---
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile # Use the root Dockerfile for better CI/CD compatibility
-    container_name: vartapravah_backend
-    restart: always
-    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
-    ports:
-      - "18000:8000"
-    env_file: .env
-    volumes:
-      - ./output:/app/output
-      - ./logs:/app/logs
-      - ./assets:/app/assets
-    depends_on:
-      - postgres
-      - redis
-      - temporal
+# ---------------------------
+# BASE IMAGE
+# ---------------------------
+FROM python:3.10-slim
 
-  # --- TEMPORAL WORKER (Workflow Orchestrator) ---
-  temporal_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: vartapravah_temporal
-    restart: always
-    command: python -m backend.workflows.temporal_worker
-    env_file: .env
-    volumes:
-      - ./output:/app/output
-      - ./logs:/app/logs
-      - ./assets:/app/assets
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - temporal
-      - postgres
+# ---------------------------
+# SYSTEM DEPENDENCIES
+# ---------------------------
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    git \
+    curl \
+    libgl1 \
+    libglib2.0-0 \
+    espeak-ng \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-  # --- TEMPORAL SERVER (Auto Setup) ---
-  temporal:
-    image: temporalio/auto-setup:latest
-    container_name: vartapravah_temporal_server
-    restart: always
-    environment:
-      - DB=postgres12
-      - DB_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PWD=password
-      - POSTGRES_SEEDS=postgres
-    ports:
-      - "7233:7233"
-      - "18233:8233"
-    depends_on:
-      - postgres
+# ---------------------------
+# SET WORK DIRECTORY
+# ---------------------------
+WORKDIR /app
 
-  # --- INFRASTRUCTURE ---
-  postgres:
-    image: postgres:15
-    container_name: vartapravah_postgres
-    restart: always
-    environment:
-      POSTGRES_DB: vartapravah
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+# ---------------------------
+# COPY REQUIREMENTS
+# ---------------------------
+COPY requirements.txt .
 
-  redis:
-    image: redis:7
-    container_name: vartapravah_redis
-    restart: always
-    ports:
-      - "6379:6379"
+# ---------------------------
+# INSTALL PYTHON DEPENDENCIES
+# ---------------------------
+RUN pip install --upgrade pip
 
-  # --- AI RENDERING (Wav2Lip) ---
-  wav2lip:
-    build:
-      context: .
-      dockerfile: ai/wav2lip/Dockerfile
-    container_name: vartapravah_wav2lip
-    restart: always
-    volumes:
-      - ./output:/app/output
-      - ./assets:/app/assets
+RUN pip install --no-cache-dir -r requirements.txt
 
-volumes:
-  postgres_data:
+# ---------------------------
+# PREPARE TTS CACHE (IMPORTANT)
+# ---------------------------
+RUN mkdir -p /root/.local/share/tts
+
+# ---------------------------
+# COPY PROJECT FILES
+# ---------------------------
+COPY . .
+
+# ---------------------------
+# FIX PERMISSIONS
+# ---------------------------
+RUN chmod -R 777 /tmp
+
+# ---------------------------
+# ENVIRONMENT VARIABLES
+# ---------------------------
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# ---------------------------
+# DEFAULT COMMAND
+# (Overridden by docker-compose)
+# ---------------------------
+CMD ["python", "backend/main.py"]
