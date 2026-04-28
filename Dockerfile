@@ -12,12 +12,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     libjpeg-dev \
     zlib1g-dev \
+    espeak-ng \
+    libsndfile1-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --upgrade pip setuptools wheel
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --user --no-cache-dir TTS librosa numba scipy -r requirements.txt
 
 # --- STAGE 2: RUNTIME ---
 FROM python:3.10-slim
@@ -35,6 +37,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     fonts-noto-ui-core \
+    espeak-ng \
+    libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Docker CLI manually (Detect architecture for ARM/X64 support)
