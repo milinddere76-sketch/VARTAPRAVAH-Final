@@ -47,10 +47,10 @@ def create_video(sadtalker_video_path, output_path, headlines=None, is_breaking=
         flash_text = escape_ffmpeg("मुख्य घडामोडी: " + " | ".join(headlines[:3]))
 
     # --- FFmpeg Filter Construction ---
-    filters = "[1:v]scale=1280:720[base];"
-    filters += "[0:v]scale=-1:720[anchor];"
+    filters = "[1:v]scale=854:480[base];"
+    filters += "[0:v]scale=-1:480[anchor];"
     filters += "[base][anchor]overlay=(W-w)/2:H-h[v1];"
-    filters += f"[2:v]scale=150:-1[logo];[v1][logo]overlay=W-170:20[v2];"
+    filters += f"[2:v]scale=120:-1[logo];[v1][logo]overlay=W-140:20[v2];"
     
     live_color = "red" if not is_breaking else "orange"
     live_label = escape_ffmpeg("● थेट प्रक्षेपण" if not is_breaking else "● विशेष बातमी")
@@ -62,15 +62,15 @@ def create_video(sadtalker_video_path, output_path, headlines=None, is_breaking=
     
     if flash_text:
         filters += (
-            f"[v3]drawtext=fontfile='{font_path}':text='{flash_text[:120]}...':x=(W-tw)/2:y=120:"
-            f"fontsize=40:fontcolor=yellow:box=1:boxcolor=black@0.6:boxborderw=20:enable='between(t,0,6)'[v4];"
+            f"[v3]drawtext=fontfile='{font_path}':text='{flash_text[:120]}...':x=(W-tw)/2:y=80:"
+            f"fontsize=32:fontcolor=yellow:box=1:boxcolor=black@0.6:boxborderw=15:enable='between(t,0,6)'[v4];"
         )
     else:
         filters += "[v3]copy[v4];"
         
     filters += (
-        f"[v4]drawtext=fontfile='{font_path}':text='{ticker_text}':x=W-mod(t*220,W+tw):y=H-70:"
-        f"fontsize=38:fontcolor=white:box=1:boxcolor=black@0.8:boxborderw=20"
+        f"[v4]drawtext=fontfile='{font_path}':text='{ticker_text}':x=W-mod(t*180,W+tw):y=H-50:"
+        f"fontsize=28:fontcolor=white:box=1:boxcolor=black@0.8:boxborderw=15"
     )
 
     if not os.path.exists(sadtalker_video_path) or os.path.getsize(sadtalker_video_path) < 1000:

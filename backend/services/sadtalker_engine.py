@@ -74,7 +74,7 @@ def generate_ai_video(image, audio, job_id=None):
     # Ensure even dimensions for libx264 (720p)
     fb_cmd = [
         "ffmpeg", "-y", "-loop", "1", "-i", str(image), "-i", str(audio),
-        "-vf", "scale=1280:720",
+        "-vf", "scale=854:480",
         "-c:v", "libx264", "-preset", "ultrafast", "-tune", "stillimage",
         "-crf", "28", "-threads", "1", 
         "-c:a", "aac", "-b:a", "128k", "-pix_fmt", "yuv420p", "-shortest", 
