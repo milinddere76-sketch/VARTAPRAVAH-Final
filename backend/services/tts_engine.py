@@ -35,7 +35,7 @@ def init_tts():
 # =========================
 # MAIN FUNCTION
 # =========================
-def generate_tts(text: str, voice="female"):
+def generate_audio(text: str, output_path: str = None, voice="female"):
     """
     Returns: audio file path OR None
     """
@@ -44,8 +44,9 @@ def generate_tts(text: str, voice="female"):
         logger.error("❌ Empty text received for TTS")
         return None
 
-    filename = f"{int(time.time())}.wav"
-    output_path = os.path.join(OUTPUT_DIR, filename)
+    if not output_path:
+        filename = f"{int(time.time())}.wav"
+        output_path = os.path.join(OUTPUT_DIR, filename)
 
     for attempt in range(MAX_RETRIES):
         try:
