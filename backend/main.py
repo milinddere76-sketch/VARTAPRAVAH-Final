@@ -12,7 +12,7 @@ from backend.database import init_db, log_analytics
 from backend.routes import stream, news
 
 # ✅ ADD THIS IMPORT
-from tts_engine import init_tts
+from backend.services.tts_engine import init_tts
 
 app = FastAPI(title="VARTA PRAVAH ENTERPRISE DASHBOARD")
 
