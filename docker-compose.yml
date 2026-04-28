@@ -32,6 +32,8 @@ services:
       - postgres
       - temporal
     command: python -m backend.workflows.temporal_worker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   # ---------------------------
   # REDIS
