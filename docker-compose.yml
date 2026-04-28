@@ -39,12 +39,13 @@ services:
   # WAV2LIP (AI FACE ENGINE)
   # ---------------------------
   wav2lip:
-    image: milinddere/vartapravah-wav2lip:latest
+    build:
+      context: .
+      dockerfile: ai/wav2lip/Dockerfile
     container_name: vartapravah_wav2lip
     restart: always
     volumes:
       - ./output:/app/output
-    # Fallback to CPU if no GPU (no nvidia reservation here to keep it compatible with Hetzner CPU nodes)
     command: tail -f /dev/null
 
   # ---------------------------
