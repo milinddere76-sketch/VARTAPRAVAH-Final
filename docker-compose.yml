@@ -16,6 +16,8 @@ services:
       - redis
       - postgres
       - temporal
+    volumes:
+      - output_data:/app/output
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
   # ---------------------------
@@ -34,6 +36,7 @@ services:
     command: python -m backend.workflows.temporal_worker
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - output_data:/app/output
 
   # ---------------------------
   # WAV2LIP (AI FACE ENGINE)
@@ -45,7 +48,7 @@ services:
     container_name: vartapravah_wav2lip
     restart: always
     volumes:
-      - ./output:/app/output
+      - output_data:/app/output
     command: tail -f /dev/null
 
   # ---------------------------
@@ -94,3 +97,4 @@ services:
 # ---------------------------
 volumes:
   postgres_data:
+  output_data:
