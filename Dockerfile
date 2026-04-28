@@ -37,8 +37,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-noto-ui-core \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Docker CLI manually (Static Binary for maximum reliability)
-RUN curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-24.0.7.tgz | tar -xzC /tmp && \
+# Install Docker CLI manually (Detect architecture for ARM/X64 support)
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "aarch64" ]; then DOCKER_ARCH="aarch64"; else DOCKER_ARCH="x86_64"; fi && \
+    curl -fsSL "https://download.docker.com/linux/static/stable/${DOCKER_ARCH}/docker-24.0.7.tgz" | tar -xzC /tmp && \
     mv /tmp/docker/docker /usr/local/bin/docker && \
     chmod +x /usr/local/bin/docker && \
     rm -rf /tmp/docker

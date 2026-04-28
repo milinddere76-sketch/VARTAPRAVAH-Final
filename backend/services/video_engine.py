@@ -62,14 +62,14 @@ def create_video(sadtalker_video_path, output_path, headlines=None, is_breaking=
     
     if flash_text:
         filters += (
-            f"[v3]drawtext=fontfile='{font_path}':text='{flash_text[:120]}...':x=(w-tw)/2:y=120:"
+            f"[v3]drawtext=fontfile='{font_path}':text='{flash_text[:120]}...':x=(W-tw)/2:y=120:"
             f"fontsize=40:fontcolor=yellow:box=1:boxcolor=black@0.6:boxborderw=20:enable='between(t,0,6)'[v4];"
         )
     else:
         filters += "[v3]copy[v4];"
         
     filters += (
-        f"[v4]drawtext=fontfile='{font_path}':text='{ticker_text}':x=w-mod(t*220,w+tw):y=h-70:"
+        f"[v4]drawtext=fontfile='{font_path}':text='{ticker_text}':x=W-mod(t*220,W+tw):y=H-70:"
         f"fontsize=38:fontcolor=white:box=1:boxcolor=black@0.8:boxborderw=20"
     )
 
