@@ -1,45 +1,39 @@
-# --- STAGE 1: BUILDER ---
-FROM python:3.10-slim AS builder
+FROM python:3.10-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    gcc \
-    g++ \
-    libpq-dev \
-    libjpeg-dev \
-    zlib1g-dev \
-    espeak-ng \
-    libsndfile1-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-COPY backend/requirements.txt .
-RUN pip install --upgrade pip setuptools wheel
-RUN pip install --user --no-cache-dir TTS librosa numba scipy -r requirements.txt
-
-# --- STAGE 2: RUNTIME ---
-FROM python:3.10-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-# Install ONLY runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+WORKDIR /app
+
+# 🔧 Step 1 — Install system dependencies FIRST
+RUN apt-get update && apt-get install -y \
     ffmpeg \
-    libgl1 \
-    libglib2.0-0 \
-    libpq5 \
-    curl \
-    ca-certificates \
-    fonts-noto-ui-core \
     espeak-ng \
     libsndfile1 \
+    build-essential \
+    git \
+    curl \
+    ca-certificates \
+    libgl1 \
+    libglib2.0-0 \
+    libpq-dev \
+    fonts-noto-ui-core \
     && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip
+RUN pip install --upgrade pip
+
+# 🔧 Step 2 — Install Python deps (NO --user)
+RUN pip install --no-cache-dir cython numpy==1.23.5
+
+# 🔧 Step 3 — Install requirements FIRST
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 🔧 Step 4 — Install TTS LAST (important)
+RUN pip install --no-cache-dir TTS
 
 # Install Docker CLI manually (Detect architecture for ARM/X64 support)
 RUN ARCH=$(uname -m) && \
@@ -49,16 +43,10 @@ RUN ARCH=$(uname -m) && \
     chmod +x /usr/local/bin/docker && \
     rm -rf /tmp/docker
 
-WORKDIR /app
-
-# Copy installed packages from builder
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
-
 # Copy the project files
 COPY . .
 
-# Internal fallback assets to ensure it works even if volume is empty
+# Internal fallback assets
 RUN mkdir -p /app/assets_internal && cp -r /app/assets/* /app/assets_internal/ || true
 
 # Default to running the backend
