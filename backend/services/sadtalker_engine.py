@@ -68,22 +68,25 @@ def generate_ai_video(image, audio, job_id=None):
         logger.error(f"❌ [WAV2LIP] Execution Error: {e}")
 
     # --- FALLBACK: FFmpeg Static ---
-    logger.info("⚠️ [WAV2LIP] Using static image fallback...")
+    logger.info(f"⚠️ [WAV2LIP] Using static image fallback for Job {job_id}...")
     fallback_path = f"/app/output/fallback_{job_id}.mp4"
     
+    # Ensure even dimensions for libx264 (720p)
     fb_cmd = [
-        "ffmpeg", "-y", "-loop", "1", "-i", image, "-i", audio,
-        "-c:v", "libx264", "-tune", "stillimage", "-c:a", "aac", "-b:a", "192k",
-        "-pix_fmt", "yuv420p", "-shortest", fallback_path
+        "ffmpeg", "-y", "-loop", "1", "-i", str(image), "-i", str(audio),
+        "-vf", "scale=1280:720",
+        "-c:v", "libx264", "-preset", "ultrafast", "-tune", "stillimage",
+        "-c:a", "aac", "-b:a", "128k", "-pix_fmt", "yuv420p", "-shortest", 
+        fallback_path
     ]
     
     try:
-        fb_res = subprocess.run(fb_cmd, capture_output=True, text=True)
-        if fb_res.returncode == 0 and os.path.exists(fallback_path):
+        fb_res = subprocess.run(fb_cmd, capture_output=True, text=True, timeout=300)
+        if fb_res.returncode == 0 and os.path.exists(fallback_path) and os.path.getsize(fallback_path) > 1000:
             logger.info(f"✅ [FALLBACK] Static Synthesis Complete: {fallback_path}")
             return fallback_path
         else:
-            logger.error(f"❌ [FALLBACK] FFmpeg failed: {fb_res.stderr}")
+            logger.error(f"❌ [FALLBACK] FFmpeg failed or produced empty file: {fb_res.stderr}")
     except Exception as e:
         logger.error(f"❌ [FALLBACK] Unexpected Error: {e}")
 

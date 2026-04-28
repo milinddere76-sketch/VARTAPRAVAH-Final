@@ -32,16 +32,11 @@ def produce_script_activity(news: list) -> str:
     return generate_script("\n".join(news))
 
 @activity.defn
-def render_video_activity(script: str) -> str:
-    logger.info("🎬 [ACTIVITY] Rendering Video...")
-
-    # 🚨 SAFETY CHECK (VERY IMPORTANT)
-    if not script or not script.strip():
-        raise Exception("❌ Empty script received")
-
-    # This internally uses TTS → SadTalker → FFmpeg
+def render_video_activity(args: list) -> str:
+    script, anchor_type, headlines, is_breaking = args
+    logger.info(f"🎬 [ACTIVITY] Rendering Video for {len(headlines)} items...")
     from backend.workflows.video_worker import process_task_direct
-    return process_task_direct(script)
+    return process_task_direct(script, anchor_type, headlines, is_breaking)
 
 
 # =========================
@@ -51,25 +46,17 @@ def render_video_activity(script: str) -> str:
 @workflow.defn
 class NewsProductionWorkflow:
     @workflow.run
-    async def run(self) -> str:
-
-        news = await workflow.execute_activity(
-            fetch_news_activity,
-            start_to_close_timeout=timedelta(seconds=60)
-        )
-
-        script = await workflow.execute_activity(
-            produce_script_activity,
-            news,
-            start_to_close_timeout=timedelta(seconds=120)
-        )
-
+    async def run(self, script: str, headlines: list, is_breaking: bool = False) -> str:
+        # We no longer fetch or generate inside the workflow to avoid redundancy
+        # but we keep the activities for manual triggers if needed.
+        
+        # Render
         video_path = await workflow.execute_activity(
             render_video_activity,
-            script,
+            [script, "female", headlines, is_breaking],
             start_to_close_timeout=timedelta(seconds=3600)
         )
-
+        
         return video_path
 
 

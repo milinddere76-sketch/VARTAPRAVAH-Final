@@ -48,7 +48,7 @@ def create_video(sadtalker_video_path, output_path, headlines=None, is_breaking=
 
     # --- FFmpeg Filter Construction ---
     filters = "[1:v]scale=1280:720[base];"
-    filters += "[0:v]scale=-1:800[anchor];"
+    filters += "[0:v]scale=-1:720[anchor];"
     filters += "[base][anchor]overlay=(W-w)/2:H-h[v1];"
     filters += f"[2:v]scale=150:-1[logo];[v1][logo]overlay=W-170:20[v2];"
     
@@ -73,26 +73,30 @@ def create_video(sadtalker_video_path, output_path, headlines=None, is_breaking=
         f"fontsize=38:fontcolor=white:box=1:boxcolor=black@0.8:boxborderw=20"
     )
 
+    if not os.path.exists(sadtalker_video_path) or os.path.getsize(sadtalker_video_path) < 1000:
+        logger.error(f"❌ [PIPELINE] Invalid input video: {sadtalker_video_path}")
+        return None
+
     cmd = [
         "ffmpeg", "-y",
         "-i", sadtalker_video_path,
         "-i", studio_path,
         "-i", logo_path,
         "-filter_complex", filters,
-        "-c:v", "libx264", "-preset", "fast", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "192k",
+        "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "128k",
         output_path
     ]
     
     logger.info(f"🎬 [PIPELINE] Compositing {output_path}...")
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
         if result.returncode != 0:
-            logger.error(f"❌ [FFMPEG] Error: {result.stderr}")
+            logger.error(f"❌ [FFMPEG] Error during composition: {result.stderr}")
             return None
         return output_path
     except Exception as e:
-        logger.error(f"❌ [PIPELINE] Unexpected Error: {e}")
+        logger.error(f"❌ [PIPELINE] Unexpected Error during composition: {e}")
         return None
 
 class VideoEngine:
