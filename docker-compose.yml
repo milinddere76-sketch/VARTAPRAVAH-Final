@@ -16,7 +16,7 @@ services:
       - redis
       - postgres
       - temporal
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
   # ---------------------------
   # TEMPORAL WORKER
@@ -73,20 +73,6 @@ services:
     ports:
       - "7233:7233"
 
-  # ---------------------------
-  # ENCODER (STREAMING)
-  # ---------------------------
-  encoder:
-    build: .
-    container_name: vartapravah_encoder
-    restart: always
-    env_file:
-      - .env
-    depends_on:
-      - backend
-    command: python encoder.py
-    environment:
-      - STREAM_URL=${STREAM_URL}
 
 # ---------------------------
 # VOLUMES
