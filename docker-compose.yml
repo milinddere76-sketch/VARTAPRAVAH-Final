@@ -1,61 +1,95 @@
-# ---------------------------
-# BASE IMAGE
-# ---------------------------
-FROM python:3.10-slim
+version: "3.9"
+
+services:
+  # ---------------------------
+  # FASTAPI BACKEND (API SERVER)
+  # ---------------------------
+  backend:
+    build: .
+    container_name: vartapravah_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+  # ---------------------------
+  # BACKGROUND WORKER (AI TASKS)
+  # ---------------------------
+  worker:
+    build: .
+    container_name: vartapravah_worker
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+    command: python worker.py
+
+  # ---------------------------
+  # REDIS (QUEUE / CACHE)
+  # ---------------------------
+  redis:
+    image: redis:7
+    container_name: vartapravah_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # ---------------------------
+  # POSTGRES (DATABASE)
+  # ---------------------------
+  postgres:
+    image: postgres:15
+    container_name: vartapravah_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vartapravah
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # ---------------------------
+  # TEMPORAL (WORKFLOW ENGINE)
+  # ---------------------------
+  temporal:
+    image: temporalio/auto-setup:1.24.2
+    container_name: vartapravah_temporal
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: root
+      POSTGRES_PWD: password
+      POSTGRES_SEEDS: postgres
+    ports:
+      - "7233:7233"
+
+  # ---------------------------
+  # OPTIONAL: ENCODER (FFmpeg STREAMING)
+  # ---------------------------
+  encoder:
+    build: .
+    container_name: vartapravah_encoder
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    command: python encoder.py
 
 # ---------------------------
-# SYSTEM DEPENDENCIES
+# VOLUMES
 # ---------------------------
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    git \
-    curl \
-    libgl1 \
-    libglib2.0-0 \
-    espeak-ng \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# ---------------------------
-# SET WORK DIRECTORY
-# ---------------------------
-WORKDIR /app
-
-# ---------------------------
-# COPY REQUIREMENTS
-# ---------------------------
-COPY requirements.txt .
-
-# ---------------------------
-# INSTALL PYTHON DEPENDENCIES
-# ---------------------------
-RUN pip install --upgrade pip
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-# ---------------------------
-# PREPARE TTS CACHE (IMPORTANT)
-# ---------------------------
-RUN mkdir -p /root/.local/share/tts
-
-# ---------------------------
-# COPY PROJECT FILES
-# ---------------------------
-COPY . .
-
-# ---------------------------
-# FIX PERMISSIONS
-# ---------------------------
-RUN chmod -R 777 /tmp
-
-# ---------------------------
-# ENVIRONMENT VARIABLES
-# ---------------------------
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
-
-# ---------------------------
-# DEFAULT COMMAND
-# (Overridden by docker-compose)
-# ---------------------------
-CMD ["python", "backend/main.py"]
+volumes:
+  postgres_data:
