@@ -6,7 +6,9 @@ ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DEFAULT_TIMEOUT=1000
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install required system libraries
+# ---------------------------
+# SYSTEM DEPENDENCIES
+# ---------------------------
 RUN apt-get update && apt-get install -y \
     build-essential \
     gcc \
@@ -17,27 +19,54 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     libgl1 \
     libglib2.0-0 \
+    espeak-ng \
     curl \
     git \
     fonts-noto-core \
     && rm -rf /var/lib/apt/lists/*
 
+# ---------------------------
+# WORKDIR
+# ---------------------------
 WORKDIR /app
 
-# Copy requirements (from backend/ because context is root)
+# ---------------------------
+# COPY REQUIREMENTS
+# ---------------------------
 COPY backend/requirements.txt .
 
-# Install Python dependencies
+# ---------------------------
+# INSTALL PYTHON DEPS
+# ---------------------------
 RUN pip install --upgrade pip setuptools wheel
+
+# Fix numpy/pillow compatibility (good you already had this)
 RUN pip install numpy==1.26.4
 RUN pip install pillow==10.2.0
 
 RUN pip install --no-cache-dir -r requirements.txt -vvv
 
-# Copy the entire project (since context is root)
+# ---------------------------
+# PREPARE TTS CACHE (🔥 VERY IMPORTANT)
+# ---------------------------
+RUN mkdir -p /root/.local/share/tts
+
+# ---------------------------
+# COPY PROJECT FILES
+# ---------------------------
 COPY . .
 
+# ---------------------------
+# FIX PERMISSIONS (🔥 IMPORTANT)
+# ---------------------------
+RUN chmod -R 777 /tmp
+
+# ---------------------------
+# ENV
+# ---------------------------
 ENV PYTHONPATH=/app
 
-# Updated to use module path since we are in the root
+# ---------------------------
+# DEFAULT CMD
+# ---------------------------
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
