@@ -32,10 +32,13 @@ def create_video(sadtalker_video_path, output_path, headlines=None, is_breaking=
             font_path = p
             break
 
-    # Preparation - Escape single quotes for FFmpeg drawtext
+    # Preparation - Deep sanitize for FFmpeg syntax stability
     def escape_ffmpeg(text):
         if not text: return ""
-        return str(text).replace("'", "\\'").replace(":", "\\:")
+        # Remove colons and brackets that break FFmpeg filters
+        text = str(text).replace(":", " ").replace("'", "").replace("[", "").replace("]", "")
+        # Basic escape for special characters
+        return text.replace(",", "\\,").replace(";", "\\;")
 
     if headlines:
         ticker_text = escape_ffmpeg(" | ".join(headlines))
@@ -62,14 +65,14 @@ def create_video(sadtalker_video_path, output_path, headlines=None, is_breaking=
     
     if flash_text:
         filters += (
-            f"[v3]drawtext=fontfile='{font_path}':text='{flash_text[:120]}...':x=(W-tw)/2:y=80:"
+            f"[v3]drawtext=fontfile='{font_path}':text='{flash_text[:120]}...':x=(w-tw)/2:y=80:"
             f"fontsize=32:fontcolor=yellow:box=1:boxcolor=black@0.6:boxborderw=15:enable='between(t,0,6)'[v4];"
         )
     else:
         filters += "[v3]copy[v4];"
         
     filters += (
-        f"[v4]drawtext=fontfile='{font_path}':text='{ticker_text}':x=W-mod(t*180,W+tw):y=H-50:"
+        f"[v4]drawtext=fontfile='{font_path}':text='{ticker_text}':x=w-mod(t*180,w+tw):y=h-50:"
         f"fontsize=28:fontcolor=white:box=1:boxcolor=black@0.8:boxborderw=15"
     )
 
