@@ -7,7 +7,7 @@ ENV PYTHONPATH=/app
 
 WORKDIR /app
 
-# 🔧 Step 1 — Install system dependencies FIRST
+# 🔧 Step 1 — Install system & core python dependencies (Combined to save space)
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     espeak-ng \
@@ -20,25 +20,17 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libpq-dev \
     fonts-noto-ui-core \
+    && pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir cython numpy==1.23.5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip
-RUN pip install --upgrade pip
-
-# 🔧 Step 1.5 — Install CPU-ONLY Torch (Saves 2-3GB Disk Space!)
-RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-
-# 🔧 Step 2 — Install Python deps (NO --user)
-RUN pip install --no-cache-dir cython numpy==1.23.5
-
-# 🔧 Step 3 — Install requirements FIRST
+# 🔧 Step 2 — Install remaining requirements and TTS
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir TTS
 
-# 🔧 Step 4 — Install TTS LAST (important)
-RUN pip install --no-cache-dir TTS
-
-# Install Docker CLI manually (Detect architecture for ARM/X64 support)
+# 🔧 Step 3 — Install Docker CLI (Detect architecture for ARM/X64 support)
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "aarch64" ]; then DOCKER_ARCH="aarch64"; else DOCKER_ARCH="x86_64"; fi && \
     curl -fsSL "https://download.docker.com/linux/static/stable/${DOCKER_ARCH}/docker-24.0.7.tgz" | tar -xzC /tmp && \
