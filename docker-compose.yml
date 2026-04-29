@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.8'
 
 services:
   # ---------------------------
@@ -25,7 +25,7 @@ services:
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
   # ---------------------------
-  # TEMPORAL WORKER
+  # TEMPORAL WORKER (AI SYNTHESIS)
   # ---------------------------
   worker:
     build: .
@@ -59,7 +59,7 @@ services:
     command: tail -f /dev/null
 
   # ---------------------------
-  # REDIS
+  # REDIS (BROKER)
   # ---------------------------
   redis:
     image: redis:7
@@ -67,7 +67,7 @@ services:
     restart: always
 
   # ---------------------------
-  # POSTGRES
+  # POSTGRES (DATABASE)
   # ---------------------------
   postgres:
     image: postgres:15
@@ -81,7 +81,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   # ---------------------------
-  # TEMPORAL (FIXED IMAGE)
+  # TEMPORAL (ORCHESTRATOR)
   # ---------------------------
   temporal:
     image: temporalio/auto-setup:1.24.2
@@ -104,4 +104,5 @@ services:
 # ---------------------------
 volumes:
   postgres_data:
-  output_data:
+  output_data:
+  tts_models:
