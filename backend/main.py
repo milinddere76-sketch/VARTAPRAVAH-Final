@@ -94,10 +94,14 @@ async def startup_event():
         # ✅ INIT DATABASE
         init_db()
 
-        # 🔥 INIT TTS MODEL HERE (VERY IMPORTANT)
-        print("🔊 [TTS] Initializing...")
-        init_tts()
-        print("✅ [TTS] Ready")
+        # 🔥 INIT TTS MODEL ONLY IF WORKER
+        is_worker = os.getenv("IS_AI_WORKER", "false").lower() == "true"
+        if is_worker:
+            print("🔊 [TTS] Initializing AI Engine...")
+            init_tts()
+            print("✅ [TTS] Ready")
+        else:
+            print("🏢 [MAIN] Skipping TTS Init (Backend Mode)")
 
     except Exception as e:
         print(f"⚠️ [STARTUP ERROR]: {e}")
