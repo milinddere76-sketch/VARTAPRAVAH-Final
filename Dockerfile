@@ -25,12 +25,11 @@ RUN pip install --no-cache-dir --upgrade pip
 # Install Torch CPU first (it's the largest part)
 RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-# Install requirements
+# Install requirements and stable transformers for TTS
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Install TTS (This takes the most time and space)
-RUN pip install --no-cache-dir TTS
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir transformers==4.33.0 \
+    && pip install --no-cache-dir TTS
 
 # ==========================================
 # STAGE 2: FINAL RUNTIME

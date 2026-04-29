@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     && cd /app/Wav2Lip \
     && mkdir -p temp checkpoints face_detection/detection/sfd \
     && pip install --upgrade pip wheel "setuptools<70.0.0" \
+    && pip uninstall -y librosa numba numpy \
     && if [ "$(uname -m)" = "x86_64" ]; then \
         pip install torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cpu; \
     else \

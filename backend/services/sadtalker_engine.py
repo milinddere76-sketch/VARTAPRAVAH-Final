@@ -73,7 +73,9 @@ def generate_ai_video(image, audio, job_id=None):
                     logger.info(f"⏳ [WAV2LIP] Rendering in progress ({elapsed}s)...")
             logger.error(f"❌ [WAV2LIP] Timeout waiting for {result_path}")
         else:
-            logger.error(f"❌ [WAV2LIP] Docker exec failed: {res.stderr}")
+            logger.error(f"❌ [WAV2LIP] Docker exec failed (Code {res.returncode})")
+            logger.error(f"STDOUT: {res.stdout}")
+            logger.error(f"STDERR: {res.stderr}")
             
     except Exception as e:
         logger.error(f"❌ [WAV2LIP] Execution Error: {e}")
