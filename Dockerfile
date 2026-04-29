@@ -1,36 +1,67 @@
-FROM python:3.10-slim
+# ==========================================
+# STAGE 1: BUILDER
+# ==========================================
+FROM python:3.10-slim AS builder
 
-ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
 
 WORKDIR /app
 
-# 🔧 Step 1 — Install system & core python dependencies (Combined to save space)
+# Install build-time system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    curl \
+    cmake \
+    pkg-config \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install Torch CPU first (it's the largest part)
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# Install requirements
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install TTS (This takes the most time and space)
+RUN pip install --no-cache-dir TTS
+
+# ==========================================
+# STAGE 2: FINAL RUNTIME
+# ==========================================
+FROM python:3.10-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /app
+
+# Install ONLY runtime system dependencies
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     espeak-ng \
     libsndfile1 \
-    build-essential \
-    git \
     curl \
     ca-certificates \
     libgl1 \
     libglib2.0-0 \
     libpq-dev \
     fonts-noto-ui-core \
-    && pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
-    && pip install --no-cache-dir cython numpy==1.23.5 \
     && rm -rf /var/lib/apt/lists/*
 
-# 🔧 Step 2 — Install remaining requirements and TTS
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir TTS
+# Copy installed python packages from builder
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
-# 🔧 Step 3 — Install Docker CLI (Detect architecture for ARM/X64 support)
+# Install Docker CLI (Architecture-aware)
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "aarch64" ]; then DOCKER_ARCH="aarch64"; else DOCKER_ARCH="x86_64"; fi && \
     curl -fsSL "https://download.docker.com/linux/static/stable/${DOCKER_ARCH}/docker-24.0.7.tgz" | tar -xzC /tmp && \
@@ -38,11 +69,10 @@ RUN ARCH=$(uname -m) && \
     chmod +x /usr/local/bin/docker && \
     rm -rf /tmp/docker
 
-# Copy the project files
+# Copy project files
 COPY . .
 
 # Internal fallback assets
 RUN mkdir -p /app/assets_internal && cp -r /app/assets/* /app/assets_internal/ || true
 
-# Default to running the backend
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
