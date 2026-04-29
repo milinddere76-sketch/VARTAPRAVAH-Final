@@ -41,9 +41,11 @@ def fetch_sources(query):
         urls.append(f"https://api.worldnewsapi.com/search-news?text={query}&api-key={world_news_key}")
 
     results = []
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+    
     for url in urls:
         try:
-            r = requests.get(url, timeout=5)
+            r = requests.get(url, headers=headers, timeout=5)
             if r.ok:
                 data = r.json()
                 # Ensure we have articles
