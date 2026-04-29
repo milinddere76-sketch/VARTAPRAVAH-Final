@@ -86,7 +86,8 @@ async def main():
         workflows=[NewsProductionWorkflow, StreamWorkflow],
         activities=[fetch_news_activity, produce_script_activity, render_video_activity],
         workflow_runner=UnsandboxedWorkflowRunner(),
-        activity_executor=concurrent.futures.ThreadPoolExecutor(max_workers=5)
+        activity_executor=concurrent.futures.ThreadPoolExecutor(max_workers=5),
+        max_concurrent_activities=5
     )
 
     logger.info("👷 [TEMPORAL] Worker started. Monitoring task queue...")

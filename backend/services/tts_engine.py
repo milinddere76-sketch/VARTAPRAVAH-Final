@@ -3,6 +3,7 @@ import time
 import logging
 
 logger = logging.getLogger("tts_engine")
+os.environ["COQUI_TOS_AGREED"] = "1"
 
 # =========================
 # CONFIG
