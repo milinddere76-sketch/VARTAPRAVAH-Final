@@ -43,6 +43,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - output_data:/app/output
+      - tts_models:/root/.local/share/tts
 
   # ---------------------------
   # WAV2LIP (AI FACE ENGINE)
