@@ -20,6 +20,7 @@ DB_PASS = os.getenv("DB_PASS", "password")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 NEWS_API_KEY = os.getenv("NEWS_API_KEY", "")
 YOUTUBE_STREAM_KEY = os.getenv("YOUTUBE_STREAM_KEY", "")
+SYNC_API_KEY = os.getenv("SYNC_API_KEY", "")
 
 # --- PATHS ---
 # In our new structure, backend is in /app

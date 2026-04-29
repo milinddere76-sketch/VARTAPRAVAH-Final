@@ -26,15 +26,26 @@ def generate_ai_video(image, audio, job_id=None):
     # 1. Find Wav2Lip Container
     try:
         docker_bin = "/usr/bin/docker" if os.path.exists("/usr/bin/docker") else "docker"
-        container_cmd = [docker_bin, "ps", "--format", "{{.Names}}"]
-        result = subprocess.run(container_cmd, capture_output=True, text=True)
-        containers = [c.strip() for c in result.stdout.split('\n') if 'wav2lip' in c]
         
-        if not containers:
-            logger.error("❌ [WAV2LIP] Container not found!")
-            return None
+        # Try exact name first
+        container_cmd = [docker_bin, "ps", "-q", "--filter", "name=vartapravah_wav2lip"]
+        result = subprocess.run(container_cmd, capture_output=True, text=True)
+        container_ids = [c.strip() for c in result.stdout.split('\n') if c.strip()]
+        
+        if container_ids:
+            wav2lip_container = container_ids[0]
+            logger.info(f"Found exact Wav2Lip container: {wav2lip_container}")
+        else:
+            # Fallback to fuzzy match
+            container_cmd = [docker_bin, "ps", "--format", "{{.Names}}"]
+            result = subprocess.run(container_cmd, capture_output=True, text=True)
+            containers = [c.strip() for c in result.stdout.split('\n') if 'wav2lip' in c]
             
-        wav2lip_container = containers[0]
+            if not containers:
+                logger.error("❌ [WAV2LIP] Container not found!")
+                return None
+            wav2lip_container = containers[0]
+            logger.warning(f"Using fuzzy-matched Wav2Lip container: {wav2lip_container}")
         
         # 2. Run Wav2Lip via Docker Exec
         exec_cmd = [
@@ -67,8 +78,20 @@ def generate_ai_video(image, audio, job_id=None):
     except Exception as e:
         logger.error(f"❌ [WAV2LIP] Execution Error: {e}")
 
-    # --- FALLBACK: FFmpeg Static ---
-    logger.info(f"⚠️ [WAV2LIP] Using static image fallback for Job {job_id}...")
+    # --- FALLBACK 1: Sync Labs API ---
+    from backend import config
+    if config.SYNC_API_KEY:
+        try:
+            logger.info(f"🚀 [FALLBACK] Attempting Sync Labs API for Job {job_id}...")
+            synclabs_video = generate_synclabs_video(image, audio, job_id)
+            if synclabs_video and os.path.exists(synclabs_video):
+                logger.info(f"✅ [SYNC-LABS] Cloud Synthesis Complete: {synclabs_video}")
+                return synclabs_video
+        except Exception as e:
+            logger.error(f"❌ [SYNC-LABS] API Call Failed: {e}")
+
+    # --- FALLBACK 2: FFmpeg Static ---
+    logger.info(f"⚠️ [PIPELINE] Using final static image fallback for Job {job_id}...")
     fallback_path = f"/app/output/fallback_{job_id}.mp4"
     
     # Ensure even dimensions for libx264 (720p)
@@ -92,3 +115,91 @@ def generate_ai_video(image, audio, job_id=None):
         logger.error(f"❌ [FALLBACK] Unexpected Error: {e}")
 
     return None
+
+def generate_synclabs_video(image_path, audio_path, job_id):
+    """
+    Calls Sync Labs API to generate lip-synced video.
+    Note: Requires Sync Labs API key in config.
+    """
+    import requests
+    from backend import config
+    
+    API_KEY = config.SYNC_API_KEY
+    BASE_URL = "https://api.synclabs.so/v2"
+    HEADERS = {"x-api-key": API_KEY}
+    
+    try:
+        # 1. Upload Assets (Sync Labs requires public URLs or direct uploads via signed URLs)
+        def upload_file(file_path):
+            # Step A: Get Signed URL
+            res = requests.post(f"{BASE_URL}/uploads", headers=HEADERS)
+            if res.status_code != 201:
+                raise Exception(f"Failed to get upload URL: {res.text}")
+            
+            data = res.json()
+            upload_url = data["url"]
+            asset_id = data["id"]
+            
+            # Step B: Put File
+            with open(file_path, "rb") as f:
+                put_res = requests.put(upload_url, data=f)
+                if put_res.status_code != 200:
+                    raise Exception(f"Failed to upload file to S3: {put_res.text}")
+            
+            return asset_id
+
+        logger.info("📤 [SYNC-LABS] Uploading image and audio...")
+        image_id = upload_file(image_path)
+        audio_id = upload_file(audio_path)
+        
+        # 2. Trigger LipSync
+        payload = {
+            "model": "lipsync-1.7.1", # High quality stable model
+            "input": [
+                {"type": "video", "assetId": image_id}, # API treats static image asset as video input
+                {"type": "audio", "assetId": audio_id}
+            ],
+            "options": {
+                "output_format": "mp4",
+                "output_fps": 25
+            }
+        }
+        
+        gen_res = requests.post(f"{BASE_URL}/generate", headers=HEADERS, json=payload)
+        if gen_res.status_code != 201:
+            raise Exception(f"Failed to start generation: {gen_res.text}")
+        
+        video_job_id = gen_res.json()["id"]
+        logger.info(f"⏳ [SYNC-LABS] Job {video_job_id} started. Polling...")
+        
+        # 3. Poll for result
+        output_file = f"/app/output/synclabs_{job_id}.mp4"
+        max_attempts = 60 # 5 minutes (5s * 60)
+        for _ in range(max_attempts):
+            status_res = requests.get(f"{BASE_URL}/jobs/{video_job_id}", headers=HEADERS)
+            if status_res.status_code == 200:
+                job_data = status_res.json()
+                status = job_data.get("status")
+                
+                if status == "COMPLETED":
+                    video_url = job_data.get("videoUrl")
+                    if not video_url:
+                        raise Exception("Job completed but no video URL found")
+                    
+                    # Download result
+                    logger.info(f"📥 [SYNC-LABS] Downloading result from {video_url}")
+                    video_content = requests.get(video_url).content
+                    with open(output_file, "wb") as f:
+                        f.write(video_content)
+                    return output_file
+                
+                elif status == "FAILED":
+                    raise Exception(f"Sync Labs job failed: {job_data.get('error')}")
+            
+            time.sleep(5)
+            
+        raise Exception("Sync Labs job timed out")
+        
+    except Exception as e:
+        logger.error(f"⚠️ [SYNC-LABS] Error: {e}")
+        return None
