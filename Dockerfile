@@ -25,6 +25,9 @@ RUN apt-get update && apt-get install -y \
 # Upgrade pip
 RUN pip install --upgrade pip
 
+# 🔧 Step 1.5 — Install CPU-ONLY Torch (Saves 2-3GB Disk Space!)
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
 # 🔧 Step 2 — Install Python deps (NO --user)
 RUN pip install --no-cache-dir cython numpy==1.23.5
 
