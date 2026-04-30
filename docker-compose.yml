@@ -39,9 +39,9 @@ services:
       resources:
         limits:
           cpus: '2.0'
-          memory: 4.5G
+          memory: 6G
         reservations:
-          memory: 3G
+          memory: 2G
     environment:
       - IS_AI_WORKER=true
     env_file:
@@ -70,7 +70,9 @@ services:
       resources:
         limits:
           cpus: '2.0'
-          memory: 2.5G
+          memory: 3.5G
+        reservations:
+          memory: 1G
     volumes:
       - output_data:/app/output
     command: tail -f /dev/null
@@ -115,7 +117,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 400M
+          memory: 1G
+        reservations:
+          memory: 200M
     depends_on:
       - postgres
     environment:
