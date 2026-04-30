@@ -5,7 +5,7 @@ echo "🚀 Starting Primary AI Node Deployment..."
 
 # 1. Update and Install Docker
 sudo apt-get update
-sudo apt-get install -y docker.io docker-compose git
+sudo apt-get install -y docker.io docker-compose git rsync
 
 # 2. Setup Swap (Crucial for SadTalker/AI)
 if [ ! -f /swapfile ]; then
