@@ -88,7 +88,9 @@ def main():
                         client = await Client.connect("temporal:7233")
                         await client.start_workflow(
                             "NewsProductionWorkflow",
-                            args=[script, rotation, is_breaking],
+                            script,
+                            rotation,
+                            is_breaking,
                             id=f"auto-bulletin-{int(time.time())}",
                             task_queue="vartapravah-queue",
                         )

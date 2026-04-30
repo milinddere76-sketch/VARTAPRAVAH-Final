@@ -37,6 +37,35 @@ def render_video_activity(script: str, anchor_type: str = "female", headlines: l
     from backend.workflows.video_worker import process_task_direct
     return process_task_direct(script, anchor_type, headlines, is_breaking)
 
+@activity.defn
+def transfer_video_activity(video_path: str) -> bool:
+    oracle_ip = os.getenv("ORACLE_NODE_IP")
+    if not oracle_ip:
+        logger.warning("⚠️ [SYNC] ORACLE_NODE_IP not set. Skipping rsync.")
+        return False
+        
+    import subprocess
+    logger.info(f"📤 [SYNC] Transferring {video_path} to Oracle @ {oracle_ip}...")
+    
+    # 1. Sync to Oracle
+    cmd = ["rsync", "-avz", video_path, f"ubuntu@{oracle_ip}:/home/ubuntu/videos/"]
+    try:
+        subprocess.run(cmd, check=True)
+        logger.info("✅ [SYNC] Transfer successful")
+        
+        # 2. Cleanup (Delete older mp4 files to save space)
+        output_dir = os.path.dirname(video_path)
+        for f in os.listdir(output_dir):
+            f_path = os.path.join(output_dir, f)
+            if f_path != video_path and f.endswith(".mp4") and f.startswith("final_bulletin_"):
+                os.remove(f_path)
+                logger.info(f"🧹 [CLEANUP] Deleted old file: {f}")
+        
+        return True
+    except Exception as e:
+        logger.error(f"❌ [SYNC] Transfer failed: {e}")
+        return False
+
 
 # =========================
 # --- WORKFLOWS ---
@@ -49,12 +78,23 @@ class NewsProductionWorkflow:
         # We no longer fetch or generate inside the workflow to avoid redundancy
         # but we keep the activities for manual triggers if needed.
         
-        # Render
+        # 1. Render
         video_path = await workflow.execute_activity(
             render_video_activity,
-            args=[script, "female", headlines, is_breaking],
+            script,
+            "female",
+            headlines,
+            is_breaking,
             start_to_close_timeout=timedelta(seconds=3600)
         )
+        
+        # 2. Sync & Cleanup (Final Recommended Flow)
+        if video_path:
+            await workflow.execute_activity(
+                transfer_video_activity,
+                video_path,
+                start_to_close_timeout=timedelta(seconds=600)
+            )
         
         return video_path
 
@@ -84,7 +124,7 @@ async def main():
         client,
         task_queue="vartapravah-queue",
         workflows=[NewsProductionWorkflow, StreamWorkflow],
-        activities=[fetch_news_activity, produce_script_activity, render_video_activity],
+        activities=[fetch_news_activity, produce_script_activity, render_video_activity, transfer_video_activity],
         workflow_runner=UnsandboxedWorkflowRunner(),
         activity_executor=concurrent.futures.ThreadPoolExecutor(max_workers=5),
         max_concurrent_activities=5
