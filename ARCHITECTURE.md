@@ -6,6 +6,13 @@ The system is optimized for a high-performance, automated pipeline across two cl
 
 ### 1. 🏭 Hetzner (Processing Server)
 *   **Role**: AI Factory (Heavy CPU/GPU).
+*   **Folder Structure**:
+    ```text
+    /app/
+    ├── output/   (Temporary video storage)
+    ├── scripts/  (Deployment & Utility scripts)
+    └── logs/     (System & AI diagnostics)
+    ```
 *   **Tasks**:
     *   **Generate**: News video synthesis (AI Anchor + Neural TTS + FFmpeg).
     *   **Auto-Transfer**: Immediately push the final video to Oracle via `rsync`.
