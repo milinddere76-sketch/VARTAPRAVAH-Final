@@ -21,11 +21,12 @@ do
     
     echo "🎬 [STREAM] Starting FFmpeg with playlist: $PLAYLIST"
     
-    # Main stream command (Infinite Loop + Seamless Switching)
+    # Main stream command (Infinite Loop + Seamless Switching + Enhanced Stability)
     ffmpeg -re -stream_loop -1 \
+    -fflags +genpts \
     -f concat -safe 0 -i "$PLAYLIST" \
     -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
-    -c:v libx264 -preset veryfast -b:v 2500k \
+    -c:v libx264 -preset veryfast -b:v 2500k -maxrate 2500k -bufsize 5000k \
     -c:a aac -b:a 128k \
     -f flv "rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY" >> "$LOG" 2>&1
     
