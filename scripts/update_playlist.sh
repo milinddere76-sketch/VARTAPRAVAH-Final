@@ -20,8 +20,11 @@ do
     echo "file '$file'" >> $TEMP_PLAYLIST
 done
 
-# 3. Add fallback if empty
-if [ ! -s $TEMP_PLAYLIST ]; then
+# 3. ALWAYS add the Fallback Loop at the end
+# This ensures FFmpeg never hits the end of the file list.
+if [ -f "/home/ubuntu/stream/fallback.mp4" ]; then
+    echo "file '/home/ubuntu/stream/fallback.mp4'" >> $TEMP_PLAYLIST
+elif [ -f "/app/assets/promo.mp4" ]; then
     echo "file '/app/assets/promo.mp4'" >> $TEMP_PLAYLIST
 fi
 
