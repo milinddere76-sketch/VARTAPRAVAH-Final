@@ -54,6 +54,8 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libpq-dev \
     fonts-noto-ui-core \
+    rsync \
+    openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed python packages from builder
