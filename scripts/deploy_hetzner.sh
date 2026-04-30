@@ -23,4 +23,7 @@ fi
 # 4. Start Infrastructure
 docker-compose up --build -d
 
+# 5. Make scripts executable
+chmod +x scripts/*.sh
+
 echo "✅ Primary Node is ONLINE at http://$(hostname -I | awk '{print $1}'):8000"

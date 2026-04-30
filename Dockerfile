@@ -70,6 +70,7 @@ RUN ARCH=$(uname -m) && \
 
 # Copy project files
 COPY . .
+RUN chmod +x scripts/*.sh
 
 # Internal fallback assets
 RUN mkdir -p /app/assets_internal && cp -r /app/assets/* /app/assets_internal/ || true
