@@ -1,56 +1,28 @@
-# Varta Pravah - Multi-Node Architecture
+# Varta Pravah - Final Multi-Node Architecture
 
-The system is designed to run across two specialized cloud nodes to balance AI processing power with streaming stability.
+The system is optimized for a high-performance, automated pipeline across two cloud providers.
 
-```mermaid
-graph TD
-    subgraph "SERVER 1: PRIMARY (Hetzner Node)"
-        A[News Fetcher] --> B[Script Generator]
-        B --> C[Neural TTS]
-        C --> D[SadTalker AI Engine]
-        D --> E[Video Compositor]
-        E --> F[(PostgreSQL)]
-        E --> G[FastAPI Endpoint]
-    end
+## 🏗️ The Core Workflow
 
-    subgraph "SERVER 2: RELAY (Oracle Node)"
-        H[Relay Script] -- Polling /api/latest-video --> G
-        G -- JSON Metadata --> H
-        H -- Download MP4 --> G
-        H --> I[Nginx-RTMP Gateway]
-        I --> J[YouTube Live]
-    end
+### 1. 🏭 Hetzner (Processing Server)
+*   **Role**: AI Factory (Heavy CPU/GPU).
+*   **Tasks**:
+    *   **Generate**: News video synthesis (AI Anchor + Neural TTS + FFmpeg).
+    *   **Auto-Transfer**: Immediately push the final video to Oracle via `rsync`.
+    *   **Auto-Cleanup**: Delete local video files immediately after successful transfer to save disk space.
 
-    subgraph "FALLBACK LOGIC"
-        K[Local Promo Loop] --> I
-    end
-```
+### 2. 📡 Oracle Cloud (Streaming Server)
+*   **Role**: Broadcast Station (Network Stability).
+*   **Tasks**:
+*   **Receive**: Automated reception of videos from Hetzner.
+*   **Auto-Stream**: Nginx-RTMP relay pushes the video to YouTube Live 24/7.
+*   **Store**: Maintains only minimal necessary files for the active broadcast.
 
-## 1. Primary Node (AI Factory)
-- **Role**: This is where the heavy GPU/CPU work happens.
-- **Workflow**:
-  1. Fetches news from multi-sources.
-  2. Generates pure Marathi scripts.
-  3. Synthesizes AI anchor video.
-  4. Stores results in `/output` and metadata in **PostgreSQL**.
-- **Connectivity**: Exposes a public/private API for the relay node.
+---
 
-## 2. Relay Node (Broadcast Station)
-- **Role**: Maintains a 24/7 connection to YouTube.
-- **Workflow**:
-  1. **Poll**: Every 30 seconds, it asks the Primary node: "Is there a new video?"
-  2. **Sync**: If yes, it downloads the file to its local storage.
-  3. **Stream**: It pushes the file to a local **Nginx-RTMP** server.
-  4. **Persist**: Nginx-RTMP keeps the connection to YouTube open even if the relay script is switching files.
-- **Fallback**: If the Primary node is down, the Relay automatically switches to an internal `promo.mp4` loop to ensure the YouTube stream never ends.
+## 🚀 Automated Synchronization (Production Flow)
 
-## 📡 Networking Configuration
-- **Server 1**: Must have port `8000` open to Server 2's IP.
-- **Server 2**: Must have the `HETZNER_NODE_URL` set to `http://<server-1-ip>:8000` in its `.env` file.
-
-## 🚀 High-Performance Synchronization (Production Recommended)
-
-To ensure maximum reliability and speed when transferring synthesized videos from Hetzner to the Oracle Relay, we recommend using **rsync**. This method is faster and more resilient than standard HTTP downloads.
+To ensure maximum reliability and speed, the system uses a strict **Generate ➔ Transfer ➔ Delete** policy.
 
 ### METHOD: RSYNC (FAST + RELIABLE)
 
@@ -64,23 +36,19 @@ To ensure maximum reliability and speed when transferring synthesized videos fro
     mkdir -p /home/ubuntu/videos
     ```
 
-#### 2. Synchronization Command
-Run this to send the latest video to the Relay node:
+#### 2. Synchronization Command (Automated in Worker)
+The worker automatically executes this command after rendering:
 ```bash
-rsync -avz /app/output/news.mp4 ubuntu@ORACLE_IP:/home/ubuntu/videos/
+rsync -avz /app/output/final_bulletin_TIMESTAMP.mp4 ubuntu@ORACLE_IP:/home/ubuntu/videos/
 ```
 
 #### 3. 🧹 Auto Cleanup (Hetzner)
-To prevent storage bloat on the AI node, regularly clear the output folder:
-```bash
-rm -rf /app/output/*.mp4
-```
+The AI node automatically clears the `/app/output` folder after every successful transfer to prevent RAM/Storage exhaustion.
 
 #### 📶 4. Network & Security Check
-Ensure the following is configured for successful transfer:
 *   **Port 22**: Must be open for SSH/rsync.
 *   **Firewall**: Oracle Cloud ingress rules must allow the Hetzner IP on Port 22.
-*   **SSH Keys**: Recommend setting up SSH keys for passwordless transfer.
+*   **SSH Keys**: SSH key-based authentication is required for the automated transfer script.
 
 ---
-This distributed setup ensures that even if you are rendering a heavy AI video on the Primary node, your YouTube stream remains perfectly stable on the Relay node.
+This architecture ensures that the AI generation never lags the live stream, and the Hetzner node remains lightweight with no local storage buildup.
