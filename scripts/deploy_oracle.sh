@@ -5,7 +5,7 @@ echo "🚀 Starting Streaming Relay Node Deployment..."
 
 # 1. Update and Install Docker
 sudo apt-get update
-sudo apt-get install -y docker.io docker-compose curl rsync
+sudo apt-get install -y docker.io docker-compose curl rsync ffmpeg
 
 # 2. Create folders for video reception
 mkdir -p /home/ubuntu/videos
