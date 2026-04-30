@@ -53,13 +53,16 @@ def transfer_video_activity(video_path: str) -> bool:
         subprocess.run(cmd, check=True)
         logger.info("✅ [SYNC] Transfer successful")
         
-        # 2. Cleanup (Delete older mp4 files to save space)
+        # 2. Cleanup (Strict Generate -> Transfer -> Delete policy)
         output_dir = os.path.dirname(video_path)
         for f in os.listdir(output_dir):
             f_path = os.path.join(output_dir, f)
-            if f_path != video_path and f.endswith(".mp4") and f.startswith("final_bulletin_"):
-                os.remove(f_path)
-                logger.info(f"🧹 [CLEANUP] Deleted old file: {f}")
+            if f.endswith(".mp4") and f.startswith("final_bulletin_"):
+                try:
+                    os.remove(f_path)
+                    logger.info(f"🧹 [CLEANUP] Deleted file: {f}")
+                except Exception as e:
+                    logger.warning(f"⚠️ [CLEANUP] Could not delete {f}: {e}")
         
         return True
     except Exception as e:
