@@ -33,10 +33,9 @@ do
     
     echo "🎬 [STREAM] Starting FFmpeg with playlist: $PLAYLIST"
     
-    # -f concat: Use the concat demuxer
-    # -safe 0: Allow absolute paths
-    # -re: Read in real-time
-    ffmpeg -re -f concat -safe 0 -i "$PLAYLIST" \
+    # Main stream command (Infinite Loop + Seamless Switching)
+    ffmpeg -re -stream_loop -1 \
+    -f concat -safe 0 -i "$PLAYLIST" \
     -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
     -c:v libx264 -preset veryfast -b:v 2500k \
     -c:a aac -b:a 128k \
