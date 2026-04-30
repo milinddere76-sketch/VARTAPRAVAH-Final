@@ -20,7 +20,10 @@ fi
 
 # Generate 1-hour static video
 ffmpeg -y $IMAGE_INPUT \
+-vf "scale=1280:720,format=yuv420p" \
 -c:v libx264 -preset ultrafast -tune stillimage \
--pix_fmt yuv420p $OUTPUT
+-c:a aac -b:a 128k \
+-ar 44100 -ac 2 \
+$OUTPUT
 
 echo "✅ [FALLBACK] Created: $OUTPUT"

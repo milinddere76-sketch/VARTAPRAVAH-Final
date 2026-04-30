@@ -63,8 +63,8 @@ def create_video(sadtalker_video_path, output_path, headlines=None, is_breaking=
     # Input 1: Studio Background
     # Input 2: Logo
     
-    filters = "[1:v]scale=854:480[base];"
-    filters += "[0:v]scale=-1:480[anchor];"
+    filters = "[1:v]scale=1280:720[base];"
+    filters += "[0:v]scale=-1:720[anchor];"
     filters += "[base][anchor]overlay=(W-w)/2:H-h[v1];"
     filters += f"[2:v]scale=120:-1[logo];[v1][logo]overlay=W-140:20[v2];"
     
