@@ -48,5 +48,19 @@ graph TD
 - **Server 1**: Must have port `8000` open to Server 2's IP.
 - **Server 2**: Must have the `HETZNER_NODE_URL` set to `http://<server-1-ip>:8000` in its `.env` file.
 
+## 🚀 High-Performance Synchronization (Production Recommended)
+
+To ensure maximum reliability and speed when transferring synthesized videos from Hetzner to the Oracle Relay, we recommend using **rsync**. This method is faster and more resilient than standard HTTP downloads.
+
+### METHOD: RSYNC (FAST + RELIABLE)
+1. **Install rsync** (On Hetzner):
+   ```bash
+   apt update && apt install -y rsync
+   ```
+2. **Send video to Oracle**:
+   ```bash
+   rsync -avz /app/output/news.mp4 ubuntu@ORACLE_IP:/home/ubuntu/videos/
+   ```
+
 ---
 This distributed setup ensures that even if you are rendering a heavy AI video on the Primary node, your YouTube stream remains perfectly stable on the Relay node.
