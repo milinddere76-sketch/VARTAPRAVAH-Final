@@ -23,6 +23,10 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 YOUTUBE_STREAM_KEY = os.getenv("YOUTUBE_STREAM_KEY", "")
 SYNC_API_KEY = os.getenv("SYNC_API_KEY", "")
 
+# --- INFRASTRUCTURE ---
+HETZNER_NODE_URL = os.getenv("HETZNER_NODE_URL", "http://localhost:8000")
+ORACLE_NODE_IP = os.getenv("ORACLE_NODE_IP", "")
+
 # --- PATHS ---
 # In our new structure, backend is in /app
 # Assets are in /app/assets, Output in /app/output
