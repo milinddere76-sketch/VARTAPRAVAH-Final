@@ -223,7 +223,7 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="val-videos">--</div>
-                        <div class="stat-label">व्युलेटिन तयार</div>
+                        <div class="stat-label">बुलेटिन तयार</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="val-uptime">24/7</div>
@@ -235,20 +235,41 @@
                     </div>
                 </div>
 
+                <!-- NEW: Control Panel -->
+                <div class="card" style="margin-top: 2rem;">
+                    <h2>🎮 कंट्रोल पॅनल (Control Panel)</h2>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                        <button onclick="triggerAction('/news/force-generate')" class="btn btn-primary" style="background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.3s; width: 100%;">
+                            🚀 नवीन बुलेटिन आत्ता तयार करा
+                        </button>
+                        <button onclick="triggerAction('/health')" class="btn" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.3s; width: 100%;">
+                            🔍 सिस्टिम हेल्थ चेक
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NEW: Latest Rendered Video -->
+                <div class="card" style="margin-top: 2rem;">
+                    <h2>📺 शेवटचे तयार झालेले बुलेटिन</h2>
+                    <div id="latest-video-container" style="background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: rgba(255,255,255,0.3);">
+                        लोड होत आहे...
+                    </div>
+                </div>
+
                 <div class="card" style="margin-top: 2rem;">
                     <h2>⚙️ एआय इंजिन स्टेटस</h2>
                     <div style="display: flex; flex-direction: column; gap: 15px;">
                         <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
                             <span style="color: rgba(255,255,255,0.5);">SadTalker Node:</span>
-                            <span style="color: #00ff80;">ACTIVE</span>
+                            <span style="color: #00ff80;" id="status-sadtalker">ACTIVE</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
                             <span style="color: rgba(255,255,255,0.5);">Temporal Worker:</span>
-                            <span style="color: #00ff80;">RUNNING</span>
+                            <span style="color: #00ff80;" id="status-temporal">RUNNING</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
                             <span style="color: rgba(255,255,255,0.5);">Relay Station:</span>
-                            <span style="color: #00ff80;">CONNECTED</span>
+                            <span style="color: #00ff80;" id="status-relay">CONNECTED</span>
                         </div>
                     </div>
                 </div>
@@ -257,24 +278,64 @@
     </div>
 
     <script>
+        async function triggerAction(endpoint) {
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ प्रक्रिया सुरू आहे...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                alert("Status: " + (data.status || "OK") + "\n" + (data.message || "Action triggered successfully"));
+            } catch (e) {
+                alert("Action failed: " + e.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
         async function updateStats() {
             try {
+                // 1. Update Analytics
                 const response = await fetch('/api/analytics');
                 const data = await response.json();
                 
                 document.getElementById('val-viewers').innerText = data.live_viewers || '0';
                 document.getElementById('val-videos').innerText = data.videos_generated || '0';
                 document.getElementById('val-revenue').innerText = data.revenue || '$0';
+
+                // 2. Update Latest Video
+                const videoRes = await fetch('/api/latest-video');
+                const videoData = await videoRes.json();
+                const container = document.getElementById('latest-video-container');
                 
-                if (data.latest_video) {
-                    document.getElementById('latest-news').innerText = "नवीन बुलेटिन तयार झाले आहे: " + data.latest_video;
+                if (videoData.status === 'success' && videoData.video_url) {
+                    container.innerHTML = `<video controls style="width: 100%; height: 100%;"><source src="${videoData.video_url}" type="video/mp4"></video>`;
+                } else {
+                    container.innerText = "कोणतेही बुलेटिन अद्याप उपलब्ध नाही.";
+                }
+
+                // 3. Update News Feed
+                const newsRes = await fetch('/news/latest');
+                const newsData = await newsRes.json();
+                const newsList = document.getElementById('news-list');
+                
+                if (newsData.status === 'success' && newsData.categories) {
+                    let html = '';
+                    const allNews = [...(newsData.categories.maharashtra || []), ...(newsData.categories.national || [])].slice(0, 5);
+                    allNews.forEach(title => {
+                        html += `<div class="news-item"><span class="tag">LIVE</span> <span>${title}</span></div>`;
+                    });
+                    newsList.innerHTML = html || '<div class="news-item">कोणतीही बातमी उपलब्ध नाही.</div>';
                 }
             } catch (e) {
                 console.error("Dashboard refresh failed", e);
             }
         }
 
-        setInterval(updateStats, 5000);
+        setInterval(updateStats, 10000);
         updateStats();
     </script>
 </body>
