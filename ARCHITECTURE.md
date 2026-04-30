@@ -53,14 +53,34 @@ graph TD
 To ensure maximum reliability and speed when transferring synthesized videos from Hetzner to the Oracle Relay, we recommend using **rsync**. This method is faster and more resilient than standard HTTP downloads.
 
 ### METHOD: RSYNC (FAST + RELIABLE)
-1. **Install rsync** (On Hetzner):
-   ```bash
-   apt update && apt install -y rsync
-   ```
-2. **Send video to Oracle**:
-   ```bash
-   rsync -avz /app/output/news.mp4 ubuntu@ORACLE_IP:/home/ubuntu/videos/
-   ```
+
+#### 1. Preparation
+*   **Hetzner**: Install rsync:
+    ```bash
+    apt update && apt install -y rsync
+    ```
+*   **Oracle**: Create the destination folder:
+    ```bash
+    mkdir -p /home/ubuntu/videos
+    ```
+
+#### 2. Synchronization Command
+Run this to send the latest video to the Relay node:
+```bash
+rsync -avz /app/output/news.mp4 ubuntu@ORACLE_IP:/home/ubuntu/videos/
+```
+
+#### 3. 🧹 Auto Cleanup (Hetzner)
+To prevent storage bloat on the AI node, regularly clear the output folder:
+```bash
+rm -rf /app/output/*.mp4
+```
+
+#### 📶 4. Network & Security Check
+Ensure the following is configured for successful transfer:
+*   **Port 22**: Must be open for SSH/rsync.
+*   **Firewall**: Oracle Cloud ingress rules must allow the Hetzner IP on Port 22.
+*   **SSH Keys**: Recommend setting up SSH keys for passwordless transfer.
 
 ---
 This distributed setup ensures that even if you are rendering a heavy AI video on the Primary node, your YouTube stream remains perfectly stable on the Relay node.
