@@ -13,7 +13,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 200M
     ports:
       - "8000:8000"
     environment:
@@ -39,9 +39,9 @@ services:
       resources:
         limits:
           cpus: '2.0'
-          memory: 3G
+          memory: 3.5G
         reservations:
-          memory: 1.5G
+          memory: 2G
     environment:
       - IS_AI_WORKER=true
     env_file:
@@ -69,7 +69,7 @@ services:
       resources:
         limits:
           cpus: '2.0'
-          memory: 2G
+          memory: 2.5G
     volumes:
       - output_data:/app/output
     command: tail -f /dev/null
@@ -84,7 +84,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 64M
 
   # ---------------------------
   # POSTGRES (DATABASE)
@@ -96,7 +96,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 200M
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -114,7 +114,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 384M
+          memory: 400M
     depends_on:
       - postgres
     environment:
