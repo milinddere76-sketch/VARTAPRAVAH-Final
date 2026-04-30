@@ -14,4 +14,6 @@ mkdir -p /home/ubuntu/stream
 # 3. Start Relay Service
 docker-compose up --build -d streamer
 
-echo "✅ Relay Node is ONLINE. Checking connection to Primary Node..."
+echo "✅ Relay Node is ONLINE."
+echo "👉 To start the YouTube stream runner:"
+echo "   nohup bash scripts/oracle_streamer.sh > /home/ubuntu/stream/stream.log 2>&1 &"
