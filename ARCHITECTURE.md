@@ -24,6 +24,8 @@ The system is optimized for a high-performance, automated pipeline across two cl
 *   **Receive**: Automated reception of videos from Hetzner.
 *   **Auto-Stream**: Nginx-RTMP relay pushes the video to YouTube Live 24/7.
 *   **Store**: Maintains only minimal necessary files for the active broadcast.
+*   **Auto-Cleanup**: Regularly delete received files older than 60 minutes to prevent disk exhaustion.
+    *   *Command*: `find /home/ubuntu/videos -type f -mmin +60 -delete` (Recommended as a 30-min cron job).
 
 ---
 
