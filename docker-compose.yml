@@ -39,9 +39,9 @@ services:
       resources:
         limits:
           cpus: '2.0'
-          memory: 3.5G
+          memory: 4.5G
         reservations:
-          memory: 2G
+          memory: 3G
     environment:
       - IS_AI_WORKER=true
     env_file:

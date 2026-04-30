@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import threading
 
 logger = logging.getLogger("tts_engine")
 os.environ["COQUI_TOS_AGREED"] = "1"
@@ -20,18 +21,24 @@ MAX_RETRIES = 3
 # LOAD COQUI MODEL (ONCE)
 # =========================
 tts_model = None
+tts_lock = threading.Lock()
 
 def init_tts():
     global tts_model
-    if USE_COQUI:
-        try:
-            from TTS.api import TTS
-            logger.info("🔊 Loading Coqui XTTS v2 model...")
-            tts_model = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2")
-            logger.info("✅ Coqui TTS loaded successfully")
-        except Exception as e:
-            logger.error(f"❌ Coqui load failed: {e}")
-            tts_model = None
+    with tts_lock:
+        if tts_model is not None:
+            logger.info("🔊 TTS model already initialized.")
+            return
+
+        if USE_COQUI:
+            try:
+                from TTS.api import TTS
+                logger.info("🔊 Loading Coqui XTTS v2 model...")
+                tts_model = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2")
+                logger.info("✅ Coqui TTS loaded successfully")
+            except Exception as e:
+                logger.error(f"❌ Coqui load failed: {e}")
+                tts_model = None
 
 # =========================
 # MAIN FUNCTION

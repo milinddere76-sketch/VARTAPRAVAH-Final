@@ -32,7 +32,7 @@ def produce_script_activity(news: list) -> str:
     return generate_script("\n".join(news))
 
 @activity.defn
-def render_video_activity(script: str, anchor_type: str, headlines: list, is_breaking: bool) -> str:
+def render_video_activity(script: str, anchor_type: str = "female", headlines: list = None, is_breaking: bool = False) -> str:
     logger.info(f"🎬 [ACTIVITY] Rendering Video for {len(headlines) if headlines else 0} items...")
     from backend.workflows.video_worker import process_task_direct
     return process_task_direct(script, anchor_type, headlines, is_breaking)
