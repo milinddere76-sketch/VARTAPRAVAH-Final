@@ -22,8 +22,9 @@ do
     if [ -n "$FILE" ]; then
         echo "🎬 [STREAM] Playing latest video: $FILE"
         
-        # FFmpeg stream to YouTube
+        # FFmpeg stream to YouTube with reconnect logic
         ffmpeg -re -i "$FILE" \
+        -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
         -c:v libx264 -preset veryfast -b:v 2500k \
         -c:a aac -b:a 128k \
         -f flv "rtmp://a.rtmp.youtube.com/live2/$STREAM_KEY"
