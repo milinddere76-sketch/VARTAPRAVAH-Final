@@ -71,8 +71,10 @@ If you see authentication errors during transfer, ensure your SSH permissions ar
     chmod 600 ~/.ssh/authorized_keys
     ```
 
-### ❌ NewsProductionWorkflow TypeError
-If the worker crashes with missing arguments, ensure you have pulled the latest code and rebuilt the worker container:
+### ❌ No video found in Oracle reception folder
+If the streamer reports "No video found", check the reception directory:
 ```bash
-docker-compose up -d --build worker
+ls -lh /home/ubuntu/videos
 ```
+*   **If empty**: Check the `transfer.log` on the Hetzner node to see if `rsync` is failing.
+*   **If file exists**: Ensure the filename ends with `.mp4`.
