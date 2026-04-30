@@ -16,14 +16,21 @@ def get_latest_news():
 
 @router.get("/force-generate")
 async def force_generate_bulletin():
-    """Immediately triggers a NewsProductionWorkflow in Temporal."""
     try:
-        # Connect to Temporal
+        # 1. Fetch news for the bulletin
+        from backend.services.news_fetcher import fetch_news
+        from backend.services.script_generator import generate_script
+        
+        headlines = fetch_news()
+        script = generate_script(headlines)
+        
+        # 2. Connect to Temporal
         client = await Client.connect("temporal:7233")
         
-        # Start Workflow
+        # 3. Start Workflow
         handle = await client.start_workflow(
             "NewsProductionWorkflow",
+            args=[script, headlines, False],
             id=f"force-bulletin-{int(config.time.time())}",
             task_queue="vartapravah-queue",
         )
