@@ -18,7 +18,7 @@ Welcome to the **Varta Pravah** AI News Ecosystem. This guide provides step-by-s
 On both servers, run:
 ```bash
 sudo apt-get update
-sudo apt-get install -y docker.io docker-compose git curl
+sudo apt-get install -y docker.io docker-compose git curl rsync ffmpeg openssh-client
 ```
 
 ---
@@ -43,7 +43,30 @@ sudo apt-get install -y docker.io docker-compose git curl
 
 ---
 
-## 🚀 Step 3: Deployment
+## 🔐 Step 3: Node Inter-Connectivity (SSH Setup)
+
+To enable automated video transfers from Hetzner to Oracle, you must set up passwordless SSH.
+
+1.  **Generate SSH Key (On Hetzner)**:
+    ```bash
+    ssh-keygen -t rsa -b 4096
+    ```
+    *Press Enter for all prompts (no passphrase).*
+
+2.  **Copy Key to Oracle**:
+    ```bash
+    ssh-copy-id ubuntu@<ORACLE_IP>
+    ```
+
+3.  **Test the Connection**:
+    ```bash
+    ssh ubuntu@<ORACLE_IP>
+    ```
+    *If you log in without a password, the automated pipeline is ready.*
+
+---
+
+## 🚀 Step 4: Deployment
 
 ### 1. Deploying the Primary Node (Hetzner)
 On the server intended for AI processing:
@@ -61,7 +84,7 @@ docker-compose -f docker-compose.relay.yml up -d --build
 
 ---
 
-## 📊 Step 4: Monitoring & Control
+## 📊 Step 5: Monitoring & Control
 
 - **Dashboard**: Access `http://your-primary-ip:8000` to view the control panel.
 - **Logs**:
@@ -69,7 +92,7 @@ docker-compose -f docker-compose.relay.yml up -d --build
   - Check `logs/streamer.log` for streaming diagnostics.
 - **Health**: Run `bash scripts/healthcheck.sh` to verify system integrity.
 
-## 🔄 Step 5: Auto-Start & Recovery
+## 🔄 Step 6: Auto-Start & Recovery
 All services are configured with `restart: always`. They will automatically start on boot and recover from crashes.
 
 ---
