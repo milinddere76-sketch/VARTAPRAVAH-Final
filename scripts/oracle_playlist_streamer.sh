@@ -15,21 +15,9 @@ STREAM_KEY=${YOUTUBE_STREAM_KEY:-"YOUR_YOUTUBE_STREAM_KEY"}
 
 echo "🎶 [PLAYLIST] Starting Playlist-Based Continuous Streamer..."
 
-# Function to refresh playlist
-refresh_playlist() {
-    echo "📝 Refreshing playlist..."
-    # Get latest 5 videos and format for FFmpeg concat demuxer
-    ls -t $VIDEO_DIR/*.mp4 2>/dev/null | head -n 5 | sed "s|^|file '|;s|$|'|" > $PLAYLIST
-    
-    if [ ! -s $PLAYLIST ]; then
-        echo "⚠️ No videos found. Adding fallback loop."
-        echo "file '/app/assets/promo.mp4'" > $PLAYLIST
-    fi
-}
 
 while true
 do
-    refresh_playlist
     
     echo "🎬 [STREAM] Starting FFmpeg with playlist: $PLAYLIST"
     
