@@ -60,4 +60,19 @@ The AI node automatically clears the `/app/output` folder after every successful
 *   **SSH Keys**: SSH key-based authentication is required for the automated transfer script.
 
 ---
-This architecture ensures that the AI generation never lags the live stream, and the Hetzner node remains lightweight with no local storage buildup.
+
+## 🛑 Troubleshooting Common Issues
+
+### ❌ Permission denied (rsync)
+If you see authentication errors during transfer, ensure your SSH permissions are strict:
+*   **On Oracle (Relay)**:
+    ```bash
+    chmod 700 ~/.ssh
+    chmod 600 ~/.ssh/authorized_keys
+    ```
+
+### ❌ NewsProductionWorkflow TypeError
+If the worker crashes with missing arguments, ensure you have pulled the latest code and rebuilt the worker container:
+```bash
+docker-compose up -d --build worker
+```

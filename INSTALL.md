@@ -99,6 +99,7 @@ All services are configured with `restart: always`. They will automatically star
 
 ## 🛑 Troubleshooting
 - **Memory Errors**: Ensure the 8GB swap is active (`swapon --show`).
+- **SSH Permissions**: If rsync fails, run `chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys` on the Oracle node.
 - **Stream Drops**: Check `HETZNER_NODE_URL` in the relay server's `.env`.
 - **Model Download**: SadTalker will download ~2GB of models on the first run. Ensure you have a stable internet connection.
 
